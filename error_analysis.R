@@ -10,6 +10,7 @@ library(ggplot2)
 arthro_sight = read.csv("2023-07-13_ExpertIdentification.csv")
 
 # true_counts displays OriginalGroup:UpdatedGroup/StandardGroup:number of ID's with that pair according to those with a photo
+
 true_counts = arthro_sight %>%
   # filter(PhotoURL != "") %>%
   group_by(OriginalGroup, StandardGroup) %>%
@@ -23,7 +24,7 @@ total_counts = arthro_sight %>%
   # filter(PhotoURL != "") %>%
   group_by(OriginalGroup) %>%
   summarize(total_ID = n())
-
+  
 # use left_join() to compare total with proportion from true_counts
 error_num = true_counts %>%
   group_by(OriginalGroup) %>% 
@@ -81,5 +82,3 @@ stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=StandardGroup
 grid = only_error_num %>%
   image(matrix('OriginalGroup', 'UpdatedGroup', 'rate'))
 # 'z' must be a matrix ???
-
-
