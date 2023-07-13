@@ -1,48 +1,85 @@
-# Script for ...
+# Script for Identifying the types of errors made by citizen scientists in Caterpillars Count!
 
 # Load libraries
 library(dplyr)
 library(tidyr)
 library(stringr)
-
+library(ggplot2)
 
 # Read in raw data
-arthro_sight = read.csv("2023-07-06_ArthropodSighting.csv")
+arthro_sight = read.csv("2023-07-13_ExpertIdentification.csv")
 
-
+# true_counts displays OriginalGroup:UpdatedGroup/StandardGroup:number of ID's with that pair according to those with a photo
 true_counts = arthro_sight %>%
-  filter(PhotoURL != "") %>%
-  group_by(OriginalGroup, UpdatedGroup) %>%
+  # filter(PhotoURL != "") %>%
+  group_by(OriginalGroup, StandardGroup) %>%
   summarize(number = n())
+# true_counts = arthro_sight() %>%
+#   group_by(OriginalGroup) %>%
+#   summarise(number = n())
 
-# make table that singles out OriginalGroup (includes total ID of OriginalGroup)
+# total_counts shows total amount of OriginalGroup IDs 
+total_counts = arthro_sight %>%
+  # filter(PhotoURL != "") %>%
+  group_by(OriginalGroup) %>%
+  summarize(total_ID = n())
+
 # use left_join() to compare total with proportion from true_counts
-# divide / error rate ... use mutate()
+error_num = true_counts %>%
+  group_by(OriginalGroup) %>% 
+  left_join(total_counts, true_counts, by = c("OriginalGroup" = "OriginalGroup")) %>%
+  mutate(rate = round((number / total_ID) * 100, 1)) %>%
+  arrange(OriginalGroup, desc(rate)) #to see total desc rate (ie daddylonglegs are the least erroneously-ID'd arthropods) delete 'OriginalGroup' from arrange()
 
-# part 2: use range()
+
+pivoted = error_num %>%
+  select(OriginalGroup, StandardGroup, rate) %>%
+  pivot_wider(names_from = StandardGroup, values_from = rate)
+
+arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar", 
+                     "daddylonglegs", "fly", "grasshopper", "leafhopper",
+                     "moths", "spider", "truebugs")
+
+pivot2 = pivoted[pivoted$OriginalGroup %in% arthGroupsWeWant, 
+                 arthGroupsWeWant] %>%
+  mutate(OriginalGroup = arthGroupsWeWant) %>%
+  select(OriginalGroup, ant:truebugs)
+
+# image() plotting
+par(mar = c(6, 6, 1, 1))
+
+image(as.matrix(pivot2[, 2:ncol(pivot2)]), xaxt="n", yaxt="n")
+mtext(arthGroupsWeWant, 1, at = (1:12)/12, las = 2, line = 1)
+mtext(arthGroupsWeWant, 2, at = (1:12)/12, las = 1, line = 1)
 
 
-# true_counts = arthro_sight %>% group_by(OriginalGroup) %>% summarise(trueAnts = ??, trueBeetle = ??, etc)
+?seq
 
-# ATTEMPTS:
 
-# true_counts = summarise(trueAnts = sum((arthro_sight$UpdatedGroup == "ant"))) 
-#cant sum a conditional... 
 
-# arthro_sight$UpdatedGroup %>% true_counts = summarise(trueAnts = count(("ant"))) 
-#"no applicable method for 'count' applied to class "character"
-# str_count() doesn't work either
 
-# arthro_sight$UpdatedGroup %>% true_counts = summarise(trueAnts = count((if_else(arthro_sight$UpdatedGroup == 'ant', 1, 0))))
-# no applicable method for 'count' applied to an object of class 'c('double', 'numeric')
+# Stacked bar graphs
 
-# if_else(arthro_sight$UpdatedGroup == 'ant', 1, 0)
-# every entry is TRUE when 'ant', FALSE when anything other than 'ant'. How to make the code seek through each point?
+only_error_num = error_num %>%
+  filter(OriginalGroup != StandardGroup)
 
-********************************************************
-  
-  # use 'summarize' to create new variables that are the *counts* of the different values in the UpdatedGroup column
-  
-  # ie for every record that a CC user said was a 'beetle' we want a "trueBeetles" column which is the number of those records that are actually beetles based on UpdatedGroup, as well as trueAnts, trueTrueBugs, etc. columns.
-  
-  # dont fully understand the "summarize" function
+
+
+stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=StandardGroup)) + 
+  geom_bar(position='stack', 
+           stat = 'identity') + 
+  labs(x = "Arthropod Group", 
+       y = "Error Rate", 
+       title = "Error Rate in Arthropod ID from Caterpillars Count!") +
+  scale_fill_manual('Position', values=c('coral2', 'steelblue', 'pink', 'green', 'darkblue', 'turquoise', 'orange','green4', 'orange4','yellow', 'yellow3', 'pink4', 'darkturquoise', 'red')) + 
+  theme(plot.title = element_text(hjust=0.5, size=10), 
+        legend.text = element_text(size = 5), 
+        legend.key.size = unit(2, 'mm'), 
+        legend.title = element_text("testing"), 
+        axis.text.x = element_text(size = 2.5))
+
+grid = only_error_num %>%
+  image(matrix('OriginalGroup', 'UpdatedGroup', 'rate'))
+# 'z' must be a matrix ???
+
+
