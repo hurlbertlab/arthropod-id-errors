@@ -34,9 +34,21 @@ only_error_num = error_num %>%
 pivoted = only_error_num %>%
   pivot_wider(names_from = UpdatedGroup, values_from = rate)
 
-stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=UpdatedGroup)) + geom_bar(position='stack', stat = 'identity') 
+stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=UpdatedGroup)) + 
+  geom_bar(position='stack', 
+           stat = 'identity') + 
+  labs(x = "Arthropod Group", 
+       y = "Error Rate", 
+       title = "Error Rate in Arthropod ID from Caterpillars Count!") +
+  scale_fill_manual('Position', values=c('coral2', 'steelblue', 'pink', 'green', 'darkblue', 'turquoise', 'orange','green4', 'orange4','yellow', 'yellow3', 'pink4', 'darkturquoise', 'red')) + 
+  theme(plot.title = element_text(hjust=0.5, size=10), 
+        legend.text = element_text(size = 5), 
+        legend.key.size = unit(2, 'mm'), 
+        axis.text.x = element_text(size = 5))
 
-# create plots to visualize data
-# image(matrix), pivot_wider(), etc
+grid = only_error_num %>%
+  image(matrix('OriginalGroup', 'UpdatedGroup', 'rate'))
+
+# create plots to visualize data -> image(matrix), pivot_wider(), etc
 
 
