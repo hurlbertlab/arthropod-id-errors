@@ -5,22 +5,18 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
-# TESTINGGGGGGGGGGGG
+library(forcats)
+
 # Read in raw data
 arthro_sight = read.csv("2023-07-13_ExpertIdentification.csv")
 
-# true_counts displays OriginalGroup:UpdatedGroup/StandardGroup:number of ID's with that pair according to those with a photo
+# true_counts displays OriginalGroup:UpdatedGroup/StandardGroup:number of ID's with that pair 
  true_counts = arthro_sight %>%
-   # filter(PhotoURL != "") %>%
    group_by(OriginalGroup, StandardGroup) %>%
-   summarize(number = n())
-# true_counts = arthro_sight() %>%
-#   group_by(OriginalGroup) %>%
-#   summarise(number = n())
+   summarize(number = n()) 
 
 # total_counts shows total amount of OriginalGroup IDs 
  total_counts = arthro_sight %>%
-   # filter(PhotoURL != "") %>%
    group_by(OriginalGroup) %>%
    summarize(total_ID = n())
   
@@ -32,6 +28,7 @@ error_num = true_counts %>%
   arrange(OriginalGroup, desc(rate)) #to see total desc rate (ie daddylonglegs are the least erroneously-ID'd arthropods) delete 'OriginalGroup' from arrange()
 
 
+# pivot table 
 pivoted = error_num %>%
   select(OriginalGroup, StandardGroup, rate) %>%
   pivot_wider(names_from = StandardGroup, values_from = rate)
@@ -47,36 +44,36 @@ pivot2 = pivoted[pivoted$OriginalGroup %in% arthGroupsWeWant,
 
 # image() plotting
 par(mar = c(6, 6, 1, 1))
+image(as.matrix(pivot2[, 2:ncol(pivot2)]), xaxt="n", yaxt="n", col = hcl.colors(100, "viridis")) 
 
-image(as.matrix(pivot2[, 2:ncol(pivot2)]), xaxt="n", yaxt="n")
-mtext(arthGroupsWeWant, 1, at = (1:12)/12, las = 2, line = 1)
-mtext(arthGroupsWeWant, 2, at = (1:12)/12, las = 1, line = 1)
+mtext(arthGroupsWeWant, 1, at = (1:12)/11, las = 2, line = 0.5, padj = -2) +
+mtext(arthGroupsWeWant, 2, at = (1:12)/11, las = 1, line = 1, padj = 3) 
 
+# can add numbers to middle cells?
 
 ?seq
 
 
-
-
-# Stacked bar graphs
+# Stacked bar graph
 
 only_error_num = error_num %>%
-  filter(OriginalGroup != StandardGroup)
+  filter(OriginalGroup != StandardGroup,
+         StandardGroup %in% arthGroupsWeWant, 
+         OriginalGroup %in% arthGroupsWeWant)
 
-
-
-stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=StandardGroup)) + 
+stacked = ggplot(only_error_num, aes(fill=StandardGroup, y=rate, x=fct_infreq(OriginalGroup))) +
   geom_bar(position='stack', 
            stat = 'identity') + 
-  labs(x = "Arthropod Group", 
+  labs(x = "Originally Submitted As", 
        y = "Error Rate", 
        title = "Error Rate in Arthropod ID from Caterpillars Count!") +
-  scale_fill_manual('Position', values=c('coral2', 'steelblue', 'pink', 'green', 'darkblue', 'turquoise', 'orange','green4', 'orange4','yellow', 'yellow3', 'pink4', 'darkturquoise', 'red')) + 
   theme(plot.title = element_text(hjust=0.5, size=10), 
         legend.text = element_text(size = 5), 
         legend.key.size = unit(2, 'mm'), 
         legend.title = element_text("testing"), 
-        axis.text.x = element_text(size = 2.5))
+        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
+
+# scale_fill_manual('Position', values=c('coral2', 'steelblue', 'pink', 'green', 'darkblue', 'turquoise', 'orange','green4', 'orange4','yellow', 'yellow3', 'pink4', 'darkturquoise', 'red')
 
 grid = only_error_num %>%
   image(matrix('OriginalGroup', 'UpdatedGroup', 'rate'))
