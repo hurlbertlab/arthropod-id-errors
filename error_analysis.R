@@ -10,13 +10,13 @@ library(forcats)
 # Read in raw data
 arthro_sight = read.csv("2023-07-13_ExpertIdentification.csv")
 
-# true_counts displays OriginalGroup:UpdatedGroup/StandardGroup:number of ID's with that pair 
- true_counts = arthro_sight %>%
+# true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
+true_counts = arthro_sight %>%
    group_by(OriginalGroup, StandardGroup) %>%
-   summarize(number = n()) 
+   summarize(number = n())
 
 # total_counts shows total amount of OriginalGroup IDs 
- total_counts = arthro_sight %>%
+total_counts = arthro_sight %>%
    group_by(OriginalGroup) %>%
    summarize(total_ID = n())
   
@@ -25,7 +25,7 @@ error_num = true_counts %>%
   group_by(OriginalGroup) %>% 
   left_join(total_counts, true_counts, by = c("OriginalGroup" = "OriginalGroup")) %>%
   mutate(rate = round((number / total_ID) * 100, 1)) %>%
-  arrange(OriginalGroup, desc(rate)) #to see total desc rate (ie daddylonglegs are the least erroneously-ID'd arthropods) delete 'OriginalGroup' from arrange()
+  arrange(OriginalGroup, desc(rate)) 
 
 
 # pivot table 
@@ -54,7 +54,7 @@ mtext(arthGroupsWeWant, 2, at = (1:12)/11, las = 1, line = 1, padj = 3)
 ?seq
 
 
-# Stacked bar graph
+# Stacked bar graph: "What Arthropods are Mistaken For"
 
 only_error_num = error_num %>%
   filter(OriginalGroup != StandardGroup,
@@ -64,19 +64,50 @@ only_error_num = error_num %>%
 stacked = ggplot(only_error_num, aes(fill=StandardGroup, y=rate, x=fct_infreq(OriginalGroup))) +
   geom_bar(position='stack', 
            stat = 'identity') + 
-  labs(x = "Originally Submitted As", 
+  labs(x = "Originally Submitted As...", 
        y = "Error Rate", 
-       title = "Error Rate in Arthropod ID from Caterpillars Count!") +
+       title = "What Arthropods are Mistaken For", 
+       fill = "Arthropod Group") +
   theme(plot.title = element_text(hjust=0.5, size=10), 
         legend.text = element_text(size = 5), 
         legend.key.size = unit(2, 'mm'), 
         legend.title = element_text("testing"), 
         axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
 
-# scale_fill_manual('Position', values=c('coral2', 'steelblue', 'pink', 'green', 'darkblue', 'turquoise', 'orange','green4', 'orange4','yellow', 'yellow3', 'pink4', 'darkturquoise', 'red')
 
-grid = only_error_num %>%
-  image(matrix('OriginalGroup', 'UpdatedGroup', 'rate'))
-# 'z' must be a matrix ???
+
+# reverse denominator stacked bar graph: "what are certain arthropods typically suspected as?"
+
+rev_stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=fct_infreq(StandardGroup))) +
+  geom_bar(position='stack', 
+           stat = 'identity') + 
+  labs(x = "Arthropod Species", 
+       y = "Error Rate", 
+       title = "What Arthropods are Typically Suspected As", 
+       fill = "Suspected As...") +
+  theme(plot.title = element_text(hjust=0.5, size=10), 
+        legend.text = element_text(size = 5), 
+        legend.key.size = unit(2, 'mm'), 
+        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
+
+# graph: commonness of arthropod (with photos vs without photos?) 'how often are certain species of arthropod spotted'
+
+standard_total_id = arthro_sight %>%
+  group_by(StandardGroup) %>%
+  summarize(total_ID = n()) %>%
+  filter(StandardGroup %in% arthGroupsWeWant)
+
+commonness = ggplot(standard_total_id, aes(y=total_ID, x=StandardGroup)) + 
+  geom_bar(position='stack', 
+           stat = 'identity') + 
+  labs(x = "Arthropod Group", 
+       y = "Amount of Observations", 
+       title = "How Often are Arthropods Spotted") +
+  theme(axis.text.x = element_text(size = 6))
+
+
+# table: surveys, observations, photos
+# graph: user error rates over time
+# graph: calculate arthropod group-specific error rates
 
 
