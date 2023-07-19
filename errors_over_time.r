@@ -3,7 +3,6 @@ library(dplyr)
 library(rvest)
 library(tidyr)
 
-
 ## Get most recent data files from caterpillars-count-data repo
 data_repo <- "https://github.com/hurlbertlab/caterpillars-count-data"
 webpage <- read_html(data_repo)
@@ -92,15 +91,16 @@ for (u in c(3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) {
 
 # YOUR JOB:
 
-# These plots display "error rate" for all arthropod groups lumped together. In many years, 
-# there was mainly an emphasis on photos of caterpillars which tend to have low error rates.
+# These plots display "error rate" for all arthropod groups lumped together. In many years, there was mainly an emphasis on photos of caterpillars which tend to have low error rates.
 
 # So how does improvement over time look for more troublesome groups?
 
 # Choose one or two arthropod groups that have the highest error rates (aphids and true bugs?)
 
-# Figure out how to create a dataframe that just has the cumulative number of photos FOR THAT GROUP,
-# and error rates specific to THAT GROUP.
+# Figure out how to create a dataframe that just has the cumulative number of photos FOR THAT GROUP,and error rates specific to THAT GROUP.
+
+APHIDcumPhotosandErrors = df %>%
+  filter("aphid" %in% StandardGroup, agreement, photoObsNum, cumErrorRate)
 
 # You should still be able to use the errorsOverTimePlot() function, but you will just put in 
 
