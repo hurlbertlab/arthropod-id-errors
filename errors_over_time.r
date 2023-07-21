@@ -97,10 +97,54 @@ for (u in c(3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) {
 
 # Choose one or two arthropod groups that have the highest error rates (aphids and true bugs?)
 
-# Figure out how to create a dataframe that just has the cumulative number of photos FOR THAT GROUP,and error rates specific to THAT GROUP.
+# Figure out how to create a dataframe that just has the 
 
-APHIDcumPhotosandErrors = df %>%
-  filter("aphid" %in% StandardGroup, agreement, photoObsNum, cumErrorRate)
+# cumulative number of photos FOR THAT GROUP,and error rates specific to THAT GROUP.
+
+aphid_errors_and_photos = df %>%
+  select(UserFKOfObserver, OriginalGroup, agreement) %>%
+  filter(OriginalGroup == "aphid") %>%
+  group_by(UserFKOfObserver) %>%
+  mutate(photoObsNumAphid = row_number(), 
+         aphidNumCorrect = cumsum(agreement),
+         aphidErrorRate = 100*(photoObsNumAphid - aphidNumCorrect)/photoObsNumAphid) %>% arrange(UserFKOfObserver)
+
+TB_errors_and_photos = df %>%
+  select(UserFKOfObserver, OriginalGroup, agreement) %>%
+  filter(OriginalGroup == "truebugs") %>%
+  group_by(UserFKOfObserver) %>%
+  mutate(photoObsNum = row_number(), 
+         cumNumCorrect = cumsum(agreement),
+         cumErrorRate = 100*(photoObsNum - cumNumCorrect)/photoObsNum) %>% arrange(UserFKOfObserver)
+
+
+# count of TB records by user
+TBusers = count(TB_errors_and_photos, UserFKOfObserver) %>% arrange(desc(n))
+
+par(mfrow = c(2, 2), mar = c(5, 5, 2, 1))
+
+# Loop over several different user IDs to create a plot for each one
+for (u in TBusers$UserFKOfObserver[TBusers$n >= 20]) { 
+  
+  errorsOverTimePlot(u, dataframe = TB_errors_and_photos, new = T, 
+                     main = paste("UserID", u))
+  
+}
+
+
+par(mfrow = c(1, 1), mar = c(5, 3, 1, 1))
+errorsOverTimePlot(26, dataframe = TB_errors_and_photos, new = T, ylim = c(0, 20))
+
+# Loop over several different user IDs to create a plot for each one
+for (u in TBusers$UserFKOfObserver[TBusers$n >= 20]) { 
+  
+  errorsOverTimePlot(u, dataframe = TB_errors_and_photos, new = F, col = u, lwd = 3)
+  
+}
+
+
+# why only 70 rows?
+
 
 # You should still be able to use the errorsOverTimePlot() function, but you will just put in 
 
