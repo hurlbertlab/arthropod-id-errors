@@ -88,18 +88,7 @@ for (u in c(3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) {
   
 }
 
-
-# YOUR JOB:
-
-# These plots display "error rate" for all arthropod groups lumped together. In many years, there was mainly an emphasis on photos of caterpillars which tend to have low error rates.
-
-# So how does improvement over time look for more troublesome groups?
-
-# Choose one or two arthropod groups that have the highest error rates (aphids and true bugs?)
-
-# Figure out how to create a dataframe that just has the 
-
-# cumulative number of photos FOR THAT GROUP,and error rates specific to THAT GROUP.
+# Figure out how to create a dataframe that just has the cumulative number of photos FOR THAT GROUP,and error rates specific to THAT GROUP.
 
 aphid_errors_and_photos = df %>%
   select(UserFKOfObserver, OriginalGroup, agreement) %>%
@@ -119,14 +108,15 @@ TB_errors_and_photos = df %>%
 
 
 # count of TB records by user
-TBusers = count(TB_errors_and_photos, UserFKOfObserver) %>% arrange(desc(n))
+TBusers = count(TB_errors_and_photos, UserFKOfObserver) %>% 
+  arrange(desc(n))
 
 par(mfrow = c(2, 2), mar = c(5, 5, 2, 1))
 
 # Loop over several different user IDs to create a plot for each one
 for (u in TBusers$UserFKOfObserver[TBusers$n >= 20]) { 
   
-  errorsOverTimePlot(u, dataframe = TB_errors_and_photos, new = T, 
+  errorsOverTimePlot(u, dataframe = TB_errors_and_photos, new = F, 
                      main = paste("UserID", u))
   
 }
@@ -141,10 +131,9 @@ for (u in TBusers$UserFKOfObserver[TBusers$n >= 20]) {
   errorsOverTimePlot(u, dataframe = TB_errors_and_photos, new = F, col = u, lwd = 3)
   
 }
+# error rates by arthropod (1 user)
 
-
-# why only 70 rows?
-
+userrates = 
 
 # You should still be able to use the errorsOverTimePlot() function, but you will just put in 
 
