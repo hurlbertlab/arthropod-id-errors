@@ -74,8 +74,6 @@ stacked = ggplot(only_error_num, aes(fill=StandardGroup, y=rate, x=fct_infreq(Or
         legend.title = element_text("testing"), 
         axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
 
-
-
 # reverse denominator stacked bar graph: "what are certain arthropods typically suspected as?"
 
 rev_stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=fct_infreq(StandardGroup))) +
@@ -109,5 +107,4 @@ commonness = ggplot(standard_total_id, aes(y=total_ID, x=StandardGroup)) +
 # table: surveys, observations, photos
 # graph: user error rates over time
 # graph: calculate arthropod group-specific error rates
-
 

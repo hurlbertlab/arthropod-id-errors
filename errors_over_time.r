@@ -133,9 +133,26 @@ for (u in TBusers$UserFKOfObserver[TBusers$n >= 20]) {
 }
 # error rates by arthropod (1 user)
 
-userrates = 
-
 # You should still be able to use the errorsOverTimePlot() function, but you will just put in 
 
 #     dataframe = <new dataframe name>
 
+# error rates by size class 
+
+SizeClassed = data.frame(df %>%
+  select(StandardGroup, Length, agreement) %>%
+  filter(StandardGroup %in% arthGroupsWeWant) %>% 
+  group_by(UserFKOfObserver) %>%
+  mutate(lengthNum = row_number(), 
+         LengthNumCorrect = cumsum(agreement),
+         LengthErrorRate = 100*(lengthNum - LengthNumCorrect)/lengthNum) %>% arrange(UserFKOfObserver))
+
+# line chart: error rates over length per arthro group
+
+SizePlot = ggplot(SizeClassed, aes(x = Length, y = LengthErrorRate, group = StandardGroup)) +
+  geom_line(stat = 'identity')
+
+
+#mutate(LessThan5 = 
+         #Midlength = (Length = between(5, 10)) #??
+         #Larger = (Length > 10)
