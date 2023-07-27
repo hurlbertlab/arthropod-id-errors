@@ -8,15 +8,16 @@ library(ggplot2)
 library(forcats)
 
 # Read in raw data
-arthro_sight = read.csv("2023-07-13_ExpertIdentification.csv")
+expert_ID = read.csv("2023-07-13_ExpertIdentification.csv")
+arthro_sight = read.csv("2023-07-17_ArthropodSighting.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
-true_counts = arthro_sight %>%
+true_counts = expert_ID %>%
    group_by(OriginalGroup, StandardGroup) %>%
    summarize(number = n())
 
 # total_counts shows total amount of OriginalGroup IDs 
-total_counts = arthro_sight %>%
+total_counts = expert_ID %>%
    group_by(OriginalGroup) %>%
    summarize(total_ID = n())
   
@@ -61,7 +62,13 @@ only_error_num = error_num %>%
          StandardGroup %in% arthGroupsWeWant, 
          OriginalGroup %in% arthGroupsWeWant)
 
-stacked = ggplot(only_error_num, aes(fill=StandardGroup, y=rate, x=fct_infreq(OriginalGroup))) +
+d2 = only_error_num
+d3 = aggregate(d2$rate, by=list(d2$OriginalGroup), FUN = sum)
+d3 = d3[order(-d3$x),]
+str = d3$Group.1
+d2$StandardGroup = factor(d2$OriginalGroup, levels=str)
+
+stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
   labs(x = "Originally Submitted As...", 
@@ -75,7 +82,26 @@ stacked = ggplot(only_error_num, aes(fill=StandardGroup, y=rate, x=fct_infreq(Or
         axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
 
 # reverse denominator stacked bar graph: "what are certain arthropods typically suspected as?"
+d2 = only_error_num
+d3 = aggregate(d2$rate, by=list(d2$StandardGroup), FUN = sum)
+d3 = d3[order(-d3$x),]
+str = d3$Group.1
+d2$StandardGroup = factor(d2$StandardGroup, levels=str)
 
+rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup)) +
+  geom_bar(position='stack', 
+           stat = 'identity') + 
+  labs(x = "Arthropod Species", 
+       y = "Error Rate", 
+       title = "What Arthropods are Typically Suspected As", 
+       fill = "Suspected As...") +
+  theme(plot.title = element_text(hjust=0.5, size=10), 
+        legend.text = element_text(size = 5), 
+        legend.key.size = unit(2, 'mm'), 
+        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0)) 
+
+
+###
 rev_stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=fct_infreq(StandardGroup))) +
   geom_bar(position='stack', 
            stat = 'identity') + 
@@ -86,11 +112,11 @@ rev_stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=fct_infre
   theme(plot.title = element_text(hjust=0.5, size=10), 
         legend.text = element_text(size = 5), 
         legend.key.size = unit(2, 'mm'), 
-        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
+        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0)) 
 
 # graph: commonness of arthropod (with photos vs without photos?) 'how often are certain species of arthropod spotted'
 
-standard_total_id = arthro_sight %>%
+standard_total_id = expert_ID %>%
   group_by(StandardGroup) %>%
   summarize(total_ID = n()) %>%
   filter(StandardGroup %in% arthGroupsWeWant)
@@ -108,3 +134,39 @@ commonness = ggplot(standard_total_id, aes(y=total_ID, x=StandardGroup)) +
 # graph: user error rates over time
 # graph: calculate arthropod group-specific error rates
 
+
+# LENGTH ANALYSIS
+
+# lengthdf = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>%
+#   select(OriginalGroup, StandardGroup, Length) %>%
+#   filter(OriginalGroup %in% arthGroupsWeWant) %>%
+#   mutate(agreement = OriginalGroup == StandardGroup) %>%
+#   group_by(OriginalGroup) %>%
+#   summarize(n0.5 = sum(Length <= 5, na.rm = T),
+#             n5.15 = sum(Length > 5 & Length <= 15, na.rm = T),
+#             n15plus = sum(Length > 15, na.rm = T)), 
+#             error0.5 = sum(Length <= 5 & !agreement, na.rm = T), 
+#             error5.15 = sum(Length > 5 & Length <= 15 & !agreement, na.rm = T), 
+#             errorn15plus = sum(Length > 15 & !agreement, na.rm = T)
+#          
+  
+lengthdf = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
+  select(OriginalGroup, StandardGroup, Length) %>% 
+  filter(OriginalGroup %in% arthGroupsWeWant) %>% 
+  mutate(agreement = OriginalGroup==StandardGroup) %>% 
+  group_by(OriginalGroup) %>% 
+  summarize(n0.5 = sum(Length <= 5, na.rm = T),
+            n5.15 = sum(Length > 5 & Length <= 15, na.rm = T),
+            n15plus = sum(Length > 15, na.rm = T),
+            error0.5 = sum(Length <= 5 & !agreement, na.rm = T),
+            error5.15 = sum(Length > 5 & Length <= 15 & !agreement, na.rm = T),
+            error15plus = sum(Length > 15 & !agreement, na.rm = T),
+            rate0.5 = 100*error0.5/n0.5,
+            rate5.15 = 100*error5.15/n5.15,
+            rate15plus = 100*error15plus/n15plus) +
+  las = 1, ylim = c(0,  1.2*max(lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")])) 
+
+par(mfrow = c(4,3), mar=c(2.5,5,1,1))
+
+for (arth in lengthdf$OriginalGroup) { plot(1:3, lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")], type = 'b', main = arth, ylab = "% error", xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("2-5 mm", "5-15 mm", "15+ mm"), 1, at = 1:3, line = 0.3, cex = 0.45))}
+# fly disparity? truebugs? 

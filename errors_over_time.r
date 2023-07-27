@@ -2,6 +2,7 @@
 library(dplyr)
 library(rvest)
 library(tidyr)
+library(ggplot2)
 
 ## Get most recent data files from caterpillars-count-data repo
 data_repo <- "https://github.com/hurlbertlab/caterpillars-count-data"
@@ -82,13 +83,23 @@ errorsOverTimePlot(UserID = 2020, dataframe = df, col = 'dodgerblue', new = FALS
 par(mfrow = c(3, 4), mar = c(5, 3, 1, 1))
 
 # Loop over several different user IDs to create a plot for each one
-for (u in c(3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) { 
+for (u in c(2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) { 
   
-  errorsOverTimePlot(u, dataframe = df, new = T)
+  errorsOverTimePlot(u, dataframe = df, new = T, ylab = "Test")
   
 }
 
-# Figure out how to create a dataframe that just has the cumulative number of photos FOR THAT GROUP,and error rates specific to THAT GROUP.
+# each plot in the multi-panel figure combined... (incomplete)
+#par(mfrow = c(1, 1), mar = c(5, 3, 1, 1))
+
+# Loop over several different user IDs to create a plot for each one
+# for (u in c(2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) { 
+#   
+# errorsOverTimePlot(u, dataframe = df, new = T)}
+
+#for (u in UserFKOfObserver) { plot(1:3, df[df$UserFKOfObserver[])}
+
+# Figure out how to create a dataframe that just has the cumulative number of photos FOR THAT GROUP, and error rates specific to THAT GROUP.
 
 aphid_errors_and_photos = df %>%
   select(UserFKOfObserver, OriginalGroup, agreement) %>%
@@ -121,38 +132,28 @@ for (u in TBusers$UserFKOfObserver[TBusers$n >= 20]) {
   
 }
 
+# current workspace
+
+par(mfrow = c(2, 2), mar = c(5, 5, 2, 1))
+
+for (u in TBusers$UserFKOfObserver[TBusers$n >= 20]) { 
+  
+  errorsOverTimePlot(u, dataframe = df, new = T, main = paste("UserID", u))
+  
+}
+
 
 par(mfrow = c(1, 1), mar = c(5, 3, 1, 1))
+
 errorsOverTimePlot(26, dataframe = TB_errors_and_photos, new = T, ylim = c(0, 20))
 
 # Loop over several different user IDs to create a plot for each one
 for (u in TBusers$UserFKOfObserver[TBusers$n >= 20]) { 
   
-  errorsOverTimePlot(u, dataframe = TB_errors_and_photos, new = F, col = u, lwd = 3)
-  
-}
+errorsOverTimePlot(u, dataframe = TB_errors_and_photos, new = T, col = u, lwd = 3)
+  }
 # error rates by arthropod (1 user)
 
 # You should still be able to use the errorsOverTimePlot() function, but you will just put in 
 
 #     dataframe = <new dataframe name>
-
-# error rates by size class 
-
-SizeClassed = data.frame(df %>%
-  select(StandardGroup, Length, agreement) %>%
-  filter(StandardGroup %in% arthGroupsWeWant) %>% 
-  group_by(UserFKOfObserver) %>%
-  mutate(lengthNum = row_number(), 
-         LengthNumCorrect = cumsum(agreement),
-         LengthErrorRate = 100*(lengthNum - LengthNumCorrect)/lengthNum) %>% arrange(UserFKOfObserver))
-
-# line chart: error rates over length per arthro group
-
-SizePlot = ggplot(SizeClassed, aes(x = Length, y = LengthErrorRate, group = StandardGroup)) +
-  geom_line(stat = 'identity')
-
-
-#mutate(LessThan5 = 
-         #Midlength = (Length = between(5, 10)) #??
-         #Larger = (Length > 10)
