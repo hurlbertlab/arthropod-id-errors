@@ -170,3 +170,19 @@ par(mfrow = c(4,3), mar=c(2.5,5,1,1))
 
 for (arth in lengthdf$OriginalGroup) { plot(1:3, lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")], type = 'b', main = arth, ylab = "% error", xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("2-5 mm", "5-15 mm", "15+ mm"), 1, at = 1:3, line = 0.3, cex = 0.45))}
 # fly disparity? truebugs? 
+
+# 12 panel figure histogram of lengths ------------------------
+
+correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
+  select(OriginalGroup, StandardGroup, Length) %>% 
+  filter(OriginalGroup %in% arthGroupsWeWant) %>% 
+  mutate(agreement = OriginalGroup==StandardGroup, binary = as.integer(agreement)) %>% 
+  group_by(OriginalGroup, Length)
+
+par(mfrow = c(4,3), mar=c(2.5,5,1,1))
+
+for (arth in correctness_table$OriginalGroup) { plot(1:3, correctness_table[correctness_table$OriginalGroup == arth, c("Length")], type = 'b', main = arth, xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("Length"), 1, at = 1:3, line = 0.3, cex = 0.45))}
+
+#for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
+
+

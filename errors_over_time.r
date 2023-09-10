@@ -157,3 +157,7 @@ errorsOverTimePlot(u, dataframe = TB_errors_and_photos, new = T, col = u, lwd = 
 # You should still be able to use the errorsOverTimePlot() function, but you will just put in 
 
 #     dataframe = <new dataframe name>
+
+# linear logistic regression - 12 panel figure histograms of lengths
+
+
