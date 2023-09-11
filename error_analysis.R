@@ -6,6 +6,7 @@ library(tidyr)
 library(stringr)
 library(ggplot2)
 library(forcats)
+library(popbio)
 
 # Read in raw data
 expert_ID = read.csv("2023-07-13_ExpertIdentification.csv")
@@ -178,11 +179,15 @@ correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSighting
   filter(OriginalGroup %in% arthGroupsWeWant) %>% 
   mutate(agreement = OriginalGroup==StandardGroup, binary = as.integer(agreement)) %>% 
   group_by(OriginalGroup, Length)
-
+  
 par(mfrow = c(4,3), mar=c(2.5,5,1,1))
 
-for (arth in correctness_table$OriginalGroup) { plot(1:3, correctness_table[correctness_table$OriginalGroup == arth, c("Length")], type = 'b', main = arth, xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("Length"), 1, at = 1:3, line = 0.3, cex = 0.45))}
+#for (arth in correctness_table$OriginalGroup) { plot(1:3, correctness_table[correctness_table$OriginalGroup == arth, c("Length")], type = 'b', main = arth, xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("Length"), 1, at = 1:3, line = 0.3, cex = 0.45))}
 
 #for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
+
+correctness_table %>%
+  select(OriginalGroup == 'ant') %>%
+  logi.hist.plot(binary, Length)
 
 
