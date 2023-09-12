@@ -172,7 +172,7 @@ par(mfrow = c(4,3), mar=c(2.5,5,1,1))
 for (arth in lengthdf$OriginalGroup) { plot(1:3, lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")], type = 'b', main = arth, ylab = "% error", xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("2-5 mm", "5-15 mm", "15+ mm"), 1, at = 1:3, line = 0.3, cex = 0.45))}
 # fly disparity? truebugs? 
 
-# 12 panel figure histogram of lengths ------------------------
+# 12 panel figure of accuracy versus length  ------------------------
 
 correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
   select(OriginalGroup, StandardGroup, Length) %>% 
@@ -180,9 +180,41 @@ correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSighting
   mutate(agreement = OriginalGroup==StandardGroup, binary = as.integer(agreement)) %>% 
   group_by(OriginalGroup, Length)
   
+
 par(mfrow = c(4,3), mar=c(2.5,5,1,1))
 
-#for (arth in correctness_table$OriginalGroup) { plot(1:3, correctness_table[correctness_table$OriginalGroup == arth, c("Length")], type = 'b', main = arth, xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("Length"), 1, at = 1:3, line = 0.3, cex = 0.45))}
+for (arth in arthGroupsWeWant) { 
+  
+  arthSubset = filter(correctness_table, OriginalGroup == arth)
+  
+  # jitter shifts values randomly by a little bit so that you can more easily see many points at identical values
+  plot(jitter(arthSubset$Length, 0.6), 
+       arthSubset$binary,
+       main = arth, xlab = "", ylab = "Correct ID", las = 1)
+  
+  #logi.hist.plot(correctness_table$Length[correctness_table$OriginalGroup == arth],  
+  #               correctness_table$agreement[correctness_table$OriginalGroup == arth],
+  #               type="hist", boxp=FALSE, counts=TRUE, 
+  #               ylabel="Correct ID", 
+  #               xlab="Length (mm)")
+  
+  arthGLM = glm(binary ~ Length, data = arthSubset)
+  
+  # Plot glm predicted response curve using example code here:
+  # https://www.geeksforgeeks.org/how-to-plot-a-logistic-regression-curve-in-r/
+  
+  # Also add text in each panel with the "slope" value (round(x, 3))
+  
+  # Challenge, add different indicators of p-value, e.g.
+  #  * if p<0.05
+  #  ** if p<0.001
+  #  *** if p<0.0001
+  
+  
+  
+}
+mtext("Length", 1, line = 1, cex = 0.45)
+
 
 #for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
 
