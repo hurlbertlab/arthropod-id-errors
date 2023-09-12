@@ -186,8 +186,7 @@ par(mfrow = c(4,3), mar=c(2.5,5,1,1))
 
 #for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
 
-correctness_table %>%
-  select(OriginalGroup == 'ant') %>%
-  logi.hist.plot(binary, Length)
-
+correctness_plot = correctness_table %>%
+  filter(correctness_table$OriginalGroup %in% 'ant') %>%
+  logi.hist.plot(Length, agreement)
 
