@@ -9,8 +9,8 @@ library(forcats)
 library(popbio)
 
 # Read in raw data
-expert_ID = read.csv("2023-07-13_ExpertIdentification.csv")
-arthro_sight = read.csv("2023-07-17_ArthropodSighting.csv")
+expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
+arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
 true_counts = expert_ID %>%
