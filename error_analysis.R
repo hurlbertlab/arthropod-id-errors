@@ -188,9 +188,9 @@ for (arth in arthGroupsWeWant) {
   arthSubset = filter(correctness_table, OriginalGroup == arth)
   
   # jitter shifts values randomly by a little bit so that you can more easily see many points at identical values
-  plot(jitter(arthSubset$Length, 0.6), 
-       arthSubset$binary,
-       main = arth, xlab = "", ylab = "Correct ID", las = 1)
+  # plot(jitter(arthSubset$Length, 0.6), 
+  #      arthSubset$binary,
+  #      main = arth, xlab = "", ylab = "Correct ID", las = 1)
   
   #logi.hist.plot(correctness_table$Length[correctness_table$OriginalGroup == arth],  
   #               correctness_table$agreement[correctness_table$OriginalGroup == arth],
@@ -200,10 +200,27 @@ for (arth in arthGroupsWeWant) {
   
   arthGLM = glm(binary ~ Length, data = arthSubset)
   
+  predicted_data = data.frame(Length = seq(min(arthSubset$Length, na.rm = TRUE), max(arthSubset$Length, na.rm=TRUE)))
+
+  predicted_data$binary = predict(arthGLM, predicted_data, type="response")
+  
+  slope = coef(lm(arthGLM)[2])
+  
+  plot((arthSubset$binary ~ arthSubset$Length), 
+       main = arth, xlab = "", ylab = "Correct ID", las = 1, text(15, 0.6, "{slope}"))
+       
+  lines(binary ~ Length, predicted_data, lwd=2, col="green")
+  
+
+}
+
+# QUESTION: am I able to 'jitter?' the jitter function requires
+#     x to be numeric, so cannot do the ~ thing
+  
   # Plot glm predicted response curve using example code here:
   # https://www.geeksforgeeks.org/how-to-plot-a-logistic-regression-curve-in-r/
   
-  # Also add text in each panel with the "slope" value (round(x, 3))
+  # Also add text in each panel with the "slope" value (round(x, 3)) 
   
   # Challenge, add different indicators of p-value, e.g.
   #  * if p<0.05
@@ -211,8 +228,6 @@ for (arth in arthGroupsWeWant) {
   #  *** if p<0.0001
   
   
-  
-}
 mtext("Length", 1, line = 1, cex = 0.45)
 
 
