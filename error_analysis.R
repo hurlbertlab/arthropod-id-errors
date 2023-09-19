@@ -189,8 +189,8 @@ for (arth in arthGroupsWeWant) {
   
   # jitter shifts values randomly by a little bit so that you can more easily see many points at identical values
   # plot(jitter(arthSubset$Length, 0.6), 
-  #      arthSubset$binary,
-  #      main = arth, xlab = "", ylab = "Correct ID", las = 1)
+  #       arthSubset$binary,
+  #       main = arth, xlab = "", ylab = "Correct ID", las = 1)
   
   #logi.hist.plot(correctness_table$Length[correctness_table$OriginalGroup == arth],  
   #               correctness_table$agreement[correctness_table$OriginalGroup == arth],
@@ -204,12 +204,12 @@ for (arth in arthGroupsWeWant) {
 
   predicted_data$binary = predict(arthGLM, predicted_data, type="response")
   
-  slope = coef(lm(arthGLM)[2])
+ # slope = coef(lm(arthGLM)[2])
   
   plot((arthSubset$binary ~ arthSubset$Length), 
-       main = arth, xlab = "", ylab = "Correct ID", las = 1, text(15, 0.6, "{slope}"))
+       main = arth, xlab = "", ylab = "Correct ID", las = 1)
        
-  lines(binary ~ Length, predicted_data, lwd=2, col="green")
+  #lines(binary ~ Length, predicted_data, lwd=2, col="green")
   
 
 }
