@@ -187,6 +187,14 @@ for (arth in arthGroupsWeWant) {
   
   arthSubset = filter(correctness_table, OriginalGroup == arth)
   
+  #Using ggplot for linear regression line plot...
+  
+  ggplot(arthSubset, aes(x=Length, y=binary)) + 
+    geom_point() + 
+    labs(title = arth) +
+    stat_smooth(method="glm", color="green", se=FALSE, method.args = list(family=binomial)) + 
+    annotate("text",x=20,y=0.6,label=(paste0("slope = ",coef(lm(arthSubset$binary~arthSubset$Length))[2])))
+  
   # jitter shifts values randomly by a little bit so that you can more easily see many points at identical values
   # plot(jitter(arthSubset$Length, 0.6), 
   #       arthSubset$binary,
@@ -198,19 +206,21 @@ for (arth in arthGroupsWeWant) {
   #               ylabel="Correct ID", 
   #               xlab="Length (mm)")
   
-  arthGLM = glm(binary ~ Length, data = arthSubset)
+  # Creating a logistic regression curve:
   
-  predicted_data = data.frame(Length = seq(min(arthSubset$Length, na.rm = TRUE), max(arthSubset$Length, na.rm=TRUE)))
+  # arthGLM = glm(binary ~ Length, data = arthSubset)
+  # 
+  # predicted_data = data.frame(Length = seq(min(arthSubset$Length, na.rm = TRUE), max(arthSubset$Length, na.rm=TRUE)))
+  # 
+  # predicted_data$binary = predict(arthGLM, predicted_data, type="response")
+  # 
+  # #slope = coef(lm(arthGLM)[2])
+  # 
+  # plot((arthSubset$binary ~ arthSubset$Length), 
+  #      main = arth, xlab = "", ylab = "Correct ID", las = 1)
+  #      
+  # lines(binary ~ Length, predicted_data, lwd=2, col="green")
 
-  predicted_data$binary = predict(arthGLM, predicted_data, type="response")
-  
- # slope = coef(lm(arthGLM)[2])
-  
-  plot((arthSubset$binary ~ arthSubset$Length), 
-       main = arth, xlab = "", ylab = "Correct ID", las = 1)
-       
-  #lines(binary ~ Length, predicted_data, lwd=2, col="green")
-  
 
 }
 
