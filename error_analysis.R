@@ -12,6 +12,16 @@ library(popbio)
 expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
 arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv")
 
+#########################################################################
+# WE WANT TO ADD SOME FILTERS TO arthro_sight SO THAT WE EXCLUDE RECORDS
+# WHERE Length IS DEEMED UNREASONABLE LARGE (I.E. AN ERROR).
+# THE LENGTH THRESHOLD WILL VARY BY ARTHROPOD GROUP, SO NEED A SEPARATE
+# FILTER FOR EACH GROUP
+# E.G. > 20 FOR DADDYLONGLEGS, > 40 FOR FLY, ETC.
+#####################################################################
+
+
+
 # true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
 true_counts = expert_ID %>%
    group_by(OriginalGroup, StandardGroup) %>%
@@ -181,7 +191,7 @@ correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSighting
   group_by(OriginalGroup, Length)
   
 
-par(mfrow = c(4,3), mar=c(2.5,5,1,1))
+par(mfrow = c(4,3), mar=c(2.5,5,2,1), oma = c(4, 1, 1, 1))
 
 for (arth in arthGroupsWeWant) { 
   
@@ -189,16 +199,11 @@ for (arth in arthGroupsWeWant) {
   
   #Using ggplot for linear regression line plot...
   
-  ggplot(arthSubset, aes(x=Length, y=binary)) + 
-    geom_point() + 
-    labs(title = arth) +
-    stat_smooth(method="glm", color="green", se=FALSE, method.args = list(family=binomial)) + 
-    annotate("text",x=20,y=0.6,label=(paste0("slope = ",coef(lm(arthSubset$binary~arthSubset$Length))[2])))
-  
-  # jitter shifts values randomly by a little bit so that you can more easily see many points at identical values
-  # plot(jitter(arthSubset$Length, 0.6), 
-  #       arthSubset$binary,
-  #       main = arth, xlab = "", ylab = "Correct ID", las = 1)
+  #ggplot(arthSubset, aes(x=Length, y=binary)) + 
+  #  geom_point() + 
+  #  labs(title = arth) +
+  #  stat_smooth(method="glm", color="green", se=FALSE, method.args = list(family=binomial)) + 
+  #  annotate("text",x=20,y=0.6,label=(paste0("slope = ",coef(lm(arthSubset$binary~arthSubset$Length))[2])))
   
   #logi.hist.plot(correctness_table$Length[correctness_table$OriginalGroup == arth],  
   #               correctness_table$agreement[correctness_table$OriginalGroup == arth],
@@ -208,37 +213,45 @@ for (arth in arthGroupsWeWant) {
   
   # Creating a logistic regression curve:
   
-  # arthGLM = glm(binary ~ Length, data = arthSubset)
+   arthGLM = glm(binary ~ Length, data = arthSubset, family = "binomial")
   # 
-  # predicted_data = data.frame(Length = seq(min(arthSubset$Length, na.rm = TRUE), max(arthSubset$Length, na.rm=TRUE)))
-  # 
-  # predicted_data$binary = predict(arthGLM, predicted_data, type="response")
-  # 
-  # #slope = coef(lm(arthGLM)[2])
-  # 
-  # plot((arthSubset$binary ~ arthSubset$Length), 
-  #      main = arth, xlab = "", ylab = "Correct ID", las = 1)
-  #      
-  # lines(binary ~ Length, predicted_data, lwd=2, col="green")
+   predicted_data = data.frame(Length = seq(min(arthSubset$Length, na.rm = TRUE), max(arthSubset$Length, na.rm=TRUE)))
+   
+   predicted_data$binary = predict(arthGLM, predicted_data, type="response")
+   
+   slope = round(coef(arthGLM)[2], 3)
+   p = summary(arthGLM)$coefficients[2, 4]
+   
+   pstar = case_when(p < 0.001 ~ "***",
+                     p < 0.01 & p > 0.001 ~ "**",
+                     p < 0.05 & p > 0.01 ~ "*",
+                     .default = "")
+   
+   plot(jitter(arthSubset$Length, .6), arthSubset$binary,
+        main = arth, xlab = "", las = 1, yaxt = "n", ylab = "")
+   
+   mtext("Incorrect <------> Correct", 2, line = .5, cex = .8)
+        
+   lines(binary ~ Length, predicted_data, lwd=2, col="green")
+   
+   abline(h = 0.9, col = 'red', lty = 'dotted')
+   
+   minLength.9 = min(predicted_data$Length[predicted_data$binary >= 0.9])
+   
+   abline(v = minLength.9, col = 'blue', lty = 'dotted')
 
+   text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0("slope = ", slope, pstar))
 
 }
+mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 2)
 
-# QUESTION: am I able to 'jitter?' the jitter function requires
-#     x to be numeric, so cannot do the ~ thing
-  
+
   # Plot glm predicted response curve using example code here:
   # https://www.geeksforgeeks.org/how-to-plot-a-logistic-regression-curve-in-r/
-  
-  # Also add text in each panel with the "slope" value (round(x, 3)) 
-  
-  # Challenge, add different indicators of p-value, e.g.
-  #  * if p<0.05
-  #  ** if p<0.001
-  #  *** if p<0.0001
+
   
   
-mtext("Length", 1, line = 1, cex = 0.45)
+
 
 
 #for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
