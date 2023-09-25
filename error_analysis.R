@@ -11,13 +11,13 @@ library(ggpubr)
 
 # Read in raw data
 expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
-arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv")
+arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") %>%
+  filter(OriginalGroup == "daddylonglegs" & Length <= 20) %>%
+  filter(OriginalGroup == "truebugs" & Length <= 40)
 
 #########################################################################
-# WE WANT TO ADD SOME FILTERS TO arthro_sight SO THAT WE EXCLUDE RECORDS
-# WHERE Length IS DEEMED UNREASONABLE LARGE (I.E. AN ERROR).
-# THE LENGTH THRESHOLD WILL VARY BY ARTHROPOD GROUP, SO NEED A SEPARATE
-# FILTER FOR EACH GROUP
+# WE WANT TO ADD SOME FILTERS TO arthro_sight SO THAT WE EXCLUDE RECORDS WHERE Length IS DEEMED UNREASONABLE LARGE (I.E. AN ERROR).
+# THE LENGTH THRESHOLD WILL VARY BY ARTHROPOD GROUP, SO NEED A SEPARATE FILTER FOR EACH GROUP
 # E.G. > 20 FOR DADDYLONGLEGS, > 40 FOR FLY, ETC.
 #####################################################################
 
