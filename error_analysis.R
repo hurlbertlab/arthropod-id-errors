@@ -12,8 +12,19 @@ library(ggpubr)
 # Read in raw data
 expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
 arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") %>%
-  filter(OriginalGroup == "daddylonglegs" & Length <= 20) %>%
-  filter(OriginalGroup == "truebugs" & Length <= 40)
+  filter(OriginalGroup == "daddylonglegs" & Length <= 20 |
+           OriginalGroup == "fly" & Length <= 40 |
+           OriginalGroup == "ant" & Length <= 25|
+           OriginalGroup == "bee" & Length <= 35|
+           OriginalGroup =="grasshopper" & Length <= 40|
+           OriginalGroup == "caterpillar" & Length <= 80|
+           OriginalGroup == "spider" & Length <= 40|
+           OriginalGroup == "grasshopper" & Length <= 50 |
+           OriginalGroup == "moths" & Length <= 80|
+           OriginalGroup == "leafhopper" & Length <= 30|
+           OriginalGroup == "ant" & Length <= 25|
+           OriginalGroup == "truebugs" & Length <= 40)
+visual_beatsheet = read.csv("2023-09-12_Survey.csv")
 
 #########################################################################
 # WE WANT TO ADD SOME FILTERS TO arthro_sight SO THAT WE EXCLUDE RECORDS WHERE Length IS DEEMED UNREASONABLE LARGE (I.E. AN ERROR).
@@ -198,20 +209,6 @@ for (arth in arthGroupsWeWant) {
   
   arthSubset = filter(correctness_table, OriginalGroup == arth)
   
-  #Using ggplot for linear regression line plot...
-  
-  #ggplot(arthSubset, aes(x=Length, y=binary)) + 
-  #  geom_point() + 
-  #  labs(title = arth) +
-  #  stat_smooth(method="glm", color="green", se=FALSE, method.args = list(family=binomial)) + 
-  #  annotate("text",x=20,y=0.6,label=(paste0("slope = ",coef(lm(arthSubset$binary~arthSubset$Length))[2])))
-  
-  #logi.hist.plot(correctness_table$Length[correctness_table$OriginalGroup == arth],  
-  #               correctness_table$agreement[correctness_table$OriginalGroup == arth],
-  #               type="hist", boxp=FALSE, counts=TRUE, 
-  #               ylabel="Correct ID", 
-  #               xlab="Length (mm)")
-  
   # Creating a logistic regression curve:
   
    arthGLM = glm(binary ~ Length, data = arthSubset, family = "binomial")
@@ -250,14 +247,14 @@ mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 2)
   # Plot glm predicted response curve using example code here:
   # https://www.geeksforgeeks.org/how-to-plot-a-logistic-regression-curve-in-r/
 
-  
-  
-
-
 
 #for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
 
 correctness_plot = correctness_table %>%
   filter(correctness_table$OriginalGroup %in% 'ant') %>%
   logi.hist.plot(Length, agreement)
+
+# Beat sheet / Visual Survey Accuracy Comparison
+
+visual_beatsheet_compressed = visual_beatshe
 
