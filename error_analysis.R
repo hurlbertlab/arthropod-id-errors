@@ -24,7 +24,7 @@ arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") %>%
            OriginalGroup == "leafhopper" & Length <= 30|
            OriginalGroup == "ant" & Length <= 25|
            OriginalGroup == "truebugs" & Length <= 40)
-visual_beatsheet = read.csv("2023-09-12_Survey.csv")
+surveys = read.csv("2023-09-12_Survey.csv")
 
 #########################################################################
 # WE WANT TO ADD SOME FILTERS TO arthro_sight SO THAT WE EXCLUDE RECORDS WHERE Length IS DEEMED UNREASONABLE LARGE (I.E. AN ERROR).
@@ -257,4 +257,31 @@ correctness_plot = correctness_table %>%
 # Beat sheet / Visual Survey Accuracy Comparison
 
 visual_beatsheet_compressed = visual_beatshe
+
+
+
+# true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
+
+# need to join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
+# group_by needs to include ObservationMethod
+# ultimately only need 100 - correct assignments for error rate
+# separate out into separate beat sheet or visual survey dataframes
+# then join those together by OriginalGroup
+# then you can plot error rates for one method against the other, do a linear regression
+
+true_counts = expert_ID %>%
+  group_by(OriginalGroup, StandardGroup) %>%
+  summarize(number = n())
+
+# total_counts shows total amount of OriginalGroup IDs 
+total_counts = expert_ID %>%
+  group_by(OriginalGroup) %>%
+  summarize(total_ID = n())
+
+# use left_join() to compare total with proportion from true_counts
+error_num = true_counts %>%
+  group_by(OriginalGroup) %>% 
+  left_join(total_counts, true_counts, by = c("OriginalGroup" = "OriginalGroup")) %>%
+  mutate(rate = round((number / total_ID) * 100, 1)) %>%
+  arrange(OriginalGroup, desc(rate)) 
 
