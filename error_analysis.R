@@ -26,14 +26,6 @@ arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") %>%
            OriginalGroup == "truebugs" & Length <= 40)
 surveys = read.csv("2023-09-12_Survey.csv")
 
-#########################################################################
-# WE WANT TO ADD SOME FILTERS TO arthro_sight SO THAT WE EXCLUDE RECORDS WHERE Length IS DEEMED UNREASONABLE LARGE (I.E. AN ERROR).
-# THE LENGTH THRESHOLD WILL VARY BY ARTHROPOD GROUP, SO NEED A SEPARATE FILTER FOR EACH GROUP
-# E.G. > 20 FOR DADDYLONGLEGS, > 40 FOR FLY, ETC.
-#####################################################################
-
-
-
 # true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
 true_counts = expert_ID %>%
    group_by(OriginalGroup, StandardGroup) %>%
@@ -256,22 +248,23 @@ correctness_plot = correctness_table %>%
 
 # Beat sheet / Visual Survey Accuracy Comparison
 
-visual_beatsheet_compressed = visual_beatshe
-
-
-
-# true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
-
+# 1
 # need to join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
 # group_by needs to include ObservationMethod
+
+# 2
 # ultimately only need 100 - correct assignments for error rate
 # separate out into separate beat sheet or visual survey dataframes
+
+# 3
 # then join those together by OriginalGroup
 # then you can plot error rates for one method against the other, do a linear regression
 
+# copy and pasted for observation method analysis...
+
 true_counts = expert_ID %>%
   group_by(OriginalGroup, StandardGroup) %>%
-  summarize(number = n())
+  summarize(occurrences = n())
 
 # total_counts shows total amount of OriginalGroup IDs 
 total_counts = expert_ID %>%
@@ -282,6 +275,18 @@ total_counts = expert_ID %>%
 error_num = true_counts %>%
   group_by(OriginalGroup) %>% 
   left_join(total_counts, true_counts, by = c("OriginalGroup" = "OriginalGroup")) %>%
-  mutate(rate = round((number / total_ID) * 100, 1)) %>%
+  filter(OriginalGroup != StandardGroup) %>%
+  mutate(rate = round((occurrences / total_ID) * 100, 1), error_rate = (100 - sum(rate))) %>%
   arrange(OriginalGroup, desc(rate)) 
+
+expertarthrojoined = left_join(expert_ID, arthro_sight, c("ArthropodSightingFK" = "SurveyFK"))
+
+surveyFK_obs = left_join(surveys, expertarthrojoined, c("ID" = "ID.x")) %>% 
+  group_by(ObservationMethod, OriginalGroup.x) %>%
+  select(ID, ObservationMethod, OriginalGroup.x, StandardGroup)
+
+beatsheet_df = left_join(error_num, surveyFK_obs, c("OriginalGroup" = "OriginalGroup.x")) %>%
+  filter(ObservationMethod == 'Beat sheet')
+ # end goal is a linear regression of BS error % versus Visual error %, with EACH POINT as an "OriginalGroup". Each originalgroup should have x = bs error rate (one value), and y = visual error rate (one value)
+
 
