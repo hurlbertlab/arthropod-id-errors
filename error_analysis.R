@@ -252,11 +252,21 @@ correctness_plot = correctness_table %>%
 # need to join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
 # group_by needs to include ObservationMethod
 
-expertarthrojoined = left_join(arthro_sight, expert_ID, c("SurveyFK" = "ArthropodSightingFK"))
+errorsByMethod = expert_ID %>%
+  left_join(arthro_sight[, c("ID", "SurveyFK")], c("ArthropodSightingFK" = "ID")) %>%
+  left_join(surveys[, c("ID", "ObservationMethod")], c("SurveyFK" = "ID")) %>% 
+  filter(!OriginalGroup %in% c("other", "unidentified")) %>%
+  group_by(ObservationMethod, OriginalGroup) %>%
+  summarize(nTot = n(),
+            numIncorrect = sum(OriginalGroup != StandardGroup),
+            errorRate = 100*numIncorrect/nTot)
 
-surveyFK_obs = left_join(surveys, expertarthrojoined, c("ID" = "ID.x")) %>% 
-  group_by(ObservationMethod, OriginalGroup.x) #%>%
-  # select(ID, ObservationMethod, OriginalGroup.x, StandardGroup)
+
+
+plot(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], cex = log10((errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Beat sheet"] + errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Visual"])/2), pch = 16, col = 'salmon')
+text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], errorsByMethod$OriginalGroup[errorsByMethod$ObservationMethod == "Visual"])
+abline(a=0, b = 1)
+
 
 
 # 2
