@@ -255,7 +255,8 @@ correctness_plot = correctness_table %>%
 expertarthrojoined = left_join(arthro_sight, expert_ID, c("SurveyFK" = "ArthropodSightingFK"))
 
 surveyFK_obs = left_join(surveys, expertarthrojoined, c("ID" = "ID.x")) %>% 
-  group_by(ObservationMethod, OriginalGroup.x) #%>%
+  group_by(ObservationMethod, OriginalGroup.x) %>%
+  # distinct(OriginalGroup, error_rate)
   # select(ID, ObservationMethod, OriginalGroup.x, StandardGroup)
 
 
@@ -265,7 +266,8 @@ surveyFK_obs = left_join(surveys, expertarthrojoined, c("ID" = "ID.x")) %>%
 # we need a value for the error rate that occurs for BEAT SHEETS,
 # rather that just a general, total error rate...
 
-beatsheet_df = left_join(surveyFK_obs, error_num, c("OriginalGroup.x" = "OriginalGroup")) %>%
+# link error to survey, then survey to method...
+beatsheet_df = left_join(surveyFK_obs, error_num, c("OriginalGroup.x" = "OriginalGroup")) %>% #duplication problem here
   filter(ObservationMethod == 'Beat sheet') %>%
   select(OriginalGroup.x, UpdatedGroup, error_rate, ID, ObservationMethod) #did not include ReviewedAndApproved because I assumed the StandardGroup accounted for this?
 #why are the notes repeated?
