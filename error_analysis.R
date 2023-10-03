@@ -11,19 +11,19 @@ library(ggpubr)
 
 # Read in raw data
 expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
-arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") %>%
-  filter(OriginalGroup == "daddylonglegs" & Length <= 20 |
-           OriginalGroup == "fly" & Length <= 40 |
-           OriginalGroup == "ant" & Length <= 25|
-           OriginalGroup == "bee" & Length <= 35|
-           OriginalGroup =="grasshopper" & Length <= 40|
-           OriginalGroup == "caterpillar" & Length <= 80|
-           OriginalGroup == "spider" & Length <= 40|
-           OriginalGroup == "grasshopper" & Length <= 50 |
-           OriginalGroup == "moths" & Length <= 80|
-           OriginalGroup == "leafhopper" & Length <= 30|
-           OriginalGroup == "ant" & Length <= 25|
-           OriginalGroup == "truebugs" & Length <= 40)
+arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") #%>%
+  # filter(OriginalGroup == "daddylonglegs" & Length <= 20 |
+  #          OriginalGroup == "fly" & Length <= 40 |
+  #          OriginalGroup == "ant" & Length <= 25|
+  #          OriginalGroup == "bee" & Length <= 35|
+  #          OriginalGroup =="grasshopper" & Length <= 40|
+  #          OriginalGroup == "caterpillar" & Length <= 80|
+  #          OriginalGroup == "spider" & Length <= 40|
+  #          OriginalGroup == "grasshopper" & Length <= 50 |
+  #          OriginalGroup == "moths" & Length <= 80|
+  #          OriginalGroup == "leafhopper" & Length <= 30|
+  #          OriginalGroup == "ant" & Length <= 25|
+  #          OriginalGroup == "truebugs" & Length <= 40)
 surveys = read.csv("2023-09-12_Survey.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
@@ -252,9 +252,26 @@ correctness_plot = correctness_table %>%
 # need to join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
 # group_by needs to include ObservationMethod
 
+expertarthrojoined = left_join(arthro_sight, expert_ID, c("SurveyFK" = "ArthropodSightingFK"))
+
+surveyFK_obs = left_join(surveys, expertarthrojoined, c("ID" = "ID.x")) %>% 
+  group_by(ObservationMethod, OriginalGroup.x) #%>%
+  # select(ID, ObservationMethod, OriginalGroup.x, StandardGroup)
+
+
 # 2
 # ultimately only need 100 - correct assignments for error rate
 # separate out into separate beat sheet or visual survey dataframes
+# we need a value for the error rate that occurs for BEAT SHEETS,
+# rather that just a general, total error rate...
+
+beatsheet_df = left_join(surveyFK_obs, error_num, c("OriginalGroup.x" = "OriginalGroup")) %>%
+  filter(ObservationMethod == 'Beat sheet') %>%
+  select(OriginalGroup.x, UpdatedGroup, error_rate, ID, ObservationMethod) #did not include ReviewedAndApproved because I assumed the StandardGroup accounted for this?
+#why are the notes repeated?
+
+visual_df = left_join(error_num, surveyFK_obs, c("OriginalGroup" = "OriginalGroup.x")) %>%
+  filter(ObservationMethod == 'Visual')
 
 # 3
 # then join those together by OriginalGroup
@@ -279,14 +296,6 @@ error_num = true_counts %>%
   mutate(rate = round((occurrences / total_ID) * 100, 1), error_rate = (100 - sum(rate))) %>%
   arrange(OriginalGroup, desc(rate)) 
 
-expertarthrojoined = left_join(expert_ID, arthro_sight, c("ArthropodSightingFK" = "SurveyFK"))
-
-surveyFK_obs = left_join(surveys, expertarthrojoined, c("ID" = "ID.x")) %>% 
-  group_by(ObservationMethod, OriginalGroup.x) %>%
-  select(ID, ObservationMethod, OriginalGroup.x, StandardGroup)
-
-beatsheet_df = left_join(error_num, surveyFK_obs, c("OriginalGroup" = "OriginalGroup.x")) %>%
-  filter(ObservationMethod == 'Beat sheet')
  # end goal is a linear regression of BS error % versus Visual error %, with EACH POINT as an "OriginalGroup". Each originalgroup should have x = bs error rate (one value), and y = visual error rate (one value)
 
 
