@@ -252,7 +252,7 @@ correctness_plot = correctness_table %>%
 # need to join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
 # group_by needs to include ObservationMethod
 
-expertarthrojoined = left_join(arthro_sight, expert_ID, c("SurveyFK" = "ArthropodSightingFK"))
+expertarthrojoined = left_join(arthro_sight, expert_ID, c("SurveyFK" = "ArthropodSightingFK")) #switch expert_ID and arthro_sight here
 
 surveyFK_obs = left_join(surveys, expertarthrojoined, c("ID" = "ID.x")) %>% 
   group_by(ObservationMethod, OriginalGroup.x) %>%
