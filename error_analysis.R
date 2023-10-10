@@ -25,6 +25,7 @@ arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") #%>%
   #          OriginalGroup == "ant" & Length <= 25|
   #          OriginalGroup == "truebugs" & Length <= 40)
 surveys = read.csv("2023-09-12_Survey.csv")
+game = read.csv("2023-09-26_VirtualSurveyScore.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
 true_counts = expert_ID %>%
@@ -249,8 +250,7 @@ correctness_plot = correctness_table %>%
 # Beat sheet / Visual Survey Accuracy Comparison
 
 # 1
-# need to join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
-# group_by needs to include ObservationMethod
+# join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
 
 errorsByMethod = expert_ID %>%
   left_join(arthro_sight[, c("ID", "SurveyFK")], c("ArthropodSightingFK" = "ID")) %>%
@@ -261,55 +261,46 @@ errorsByMethod = expert_ID %>%
             numIncorrect = sum(OriginalGroup != StandardGroup),
             errorRate = 100*numIncorrect/nTot)
 
-plot(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], cex = log10((errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Beat sheet"] + errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Visual"])/2), pch = 16, col = 'salmon')
-text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], errorsByMethod$OriginalGroup[errorsByMethod$ObservationMethod == "Visual"])
+bsvplot = plot(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], xlab = "Beat Sheet", ylab = "Visual", main = "Observation Method Accuracy", errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], cex = log10 ((errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Beat sheet"] + errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Visual"])/2), pch = 16, col = 'salmon')
+
+text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], errorsByMethod$OriginalGroup[errorsByMethod$ObservationMethod == "Visual"], cex = 0.7)
+
 abline(a=0, b = 1)
->>>>>>> 6d4020c32527ad98a363183c83c6a0908a980ddb
 
-surveyFK_obs = left_join(surveys, expertarthrojoined, c("ID" = "ID.x")) %>% 
-  group_by(ObservationMethod, OriginalGroup.x) %>%
-  # distinct(OriginalGroup, error_rate)
-  # select(ID, ObservationMethod, OriginalGroup.x, StandardGroup)
+# end of analysis
+
+#Game Data Analysis - how good are people at estimating length?
+
+gameplaydf =  game %>%
+  select(ID, UserFK, Score) %>%
+  group_by(UserFK) %>%
+  mutate(userplays = n(), avgscore = sum(Score)/userplays) #%>%
+  # left_join(arthro_sight[, c("ID", "SurveyFK")]) %>%
+  # left_join(surveys[, c("ID", "ObservationMethod")], c("SurveyFK" = "ID")) 
 
 
-# 2
-# ultimately only need 100 - correct assignments for error rate
-# separate out into separate beat sheet or visual survey dataframes
-# we need a value for the error rate that occurs for BEAT SHEETS,
-# rather that just a general, total error rate...
+gameplayandusererrors = left_join(surveys, arthro_sight, by = c('ID' = 'SurveyFK')) %>%
+  rename(ArthropodSightingFK = ID.y) %>%
+  left_join(expert_ID, by = c("ArthropodSightingFK", "OriginalGroup")) %>%
+  rename(SurveyID = ID.x) %>%            
+  dplyr::select(SurveyID, UserFKOfObserver, ArthropodSightingFK, OriginalGroup, Length, StandardGroup) %>%
+  arrange(SurveyID) %>%
+  group_by(UserFKOfObserver) %>%
+  mutate(userSurveyNumber = row_number(),
+         agreement = StandardGroup == OriginalGroup) %>%
+  filter(!OriginalGroup %in% c("unidentified", "other"), 
+         !is.na(StandardGroup)) %>%
+  mutate(photoObsNum = row_number(), 
+         cumNumCorrect = cumsum(agreement),
+         cumErrorRate = 100*(photoObsNum - cumNumCorrect)/photoObsNum) %>%
+  arrange(UserFKOfObserver, SurveyID) #%>%
+ # left_join(gameplaydf, by = c("UserFKOfObserver" = "UserFK")) #%>%
+  # select(UserFKOfObserver, userplays, avgscore, cumErrorRate) %>%
+  # mutate(avgerrorrate = sum(cumErrorRate)/)
 
-# link error to survey, then survey to method...
-beatsheet_df = left_join(surveyFK_obs, error_num, c("OriginalGroup.x" = "OriginalGroup")) %>% #duplication problem here
-  filter(ObservationMethod == 'Beat sheet') %>%
-  select(OriginalGroup.x, UpdatedGroup, error_rate, ID, ObservationMethod) #did not include ReviewedAndApproved because I assumed the StandardGroup accounted for this?
-#why are the notes repeated?
-
-visual_df = left_join(error_num, surveyFK_obs, c("OriginalGroup" = "OriginalGroup.x")) %>%
-  filter(ObservationMethod == 'Visual')
-
-# 3
-# then join those together by OriginalGroup
-# then you can plot error rates for one method against the other, do a linear regression
-
-# copy and pasted for observation method analysis...
-
-true_counts = expert_ID %>%
-  group_by(OriginalGroup, StandardGroup) %>%
-  summarize(occurrences = n())
-
-# total_counts shows total amount of OriginalGroup IDs 
-total_counts = expert_ID %>%
-  group_by(OriginalGroup) %>%
-  summarize(total_ID = n())
-
-# use left_join() to compare total with proportion from true_counts
-error_num = true_counts %>%
-  group_by(OriginalGroup) %>% 
-  left_join(total_counts, true_counts, by = c("OriginalGroup" = "OriginalGroup")) %>%
-  filter(OriginalGroup != StandardGroup) %>%
-  mutate(rate = round((occurrences / total_ID) * 100, 1), error_rate = (100 - sum(rate))) %>%
-  arrange(OriginalGroup, desc(rate)) 
-
- # end goal is a linear regression of BS error % versus Visual error %, with EACH POINT as an "OriginalGroup". Each originalgroup should have x = bs error rate (one value), and y = visual error rate (one value)
-
+userTotals = gameplayandusererrors %>%
+  group_by(UserFKOfObserver) %>%
+  summarize(totalSurveys = max(userSurveyNumber),
+            totalPhotos = max(photoObsNum)) %>%
+  arrange(desc(totalPhotos))
 
