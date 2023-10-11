@@ -268,37 +268,40 @@ text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"],
 abline(a=0, b = 1)
 
 #Game Data Analysis - how good are people at estimating length?
+# filter to difficult arth groups/out 'easy' groups rather than by individual, because error rate by individual might be skewed due to 'easy' arths
+
+# for each user, we want the 1st score, avg score, max score, for all 4 scores (lengths, percentfound, IDaccuracy)
+
+# first quiz score to their survey error rate (use 1st score or best score here)
+# user error in game over time (mean score here)
 
 gameplaydf =  game %>%
   select(UserFK, Score) %>%
   group_by(UserFK) %>%
-  mutate(userplays = n(), avgscore = sum(Score)/userplays) #%>%
-  # left_join(arthro_sight[, c("ID", "SurveyFK")]) %>%
-  # left_join(surveys[, c("ID", "ObservationMethod")], c("SurveyFK" = "ID")) 
+  summarize(userplays = n(), 
+            avgscore = sum(Score)/userplays,
+            first = Score[1], 
+            max = max(Score, na.rm = TRUE))
 
-
-surveyusererrors = left_join(surveys, arthro_sight, by = c('ID' = 'SurveyFK')) %>%
-  rename(ArthropodSightingFK = ID.y) %>%
-  left_join(expert_ID, by = c("ArthropodSightingFK", "OriginalGroup")) %>%
-  rename(SurveyID = ID.x) %>%            
-  dplyr::select(UserFKOfObserver, ArthropodSightingFK, OriginalGroup, Length, StandardGroup) %>%
+surveyusererrors = expert_ID %>%
+  left_join(arthro_sight[, c("ID", "SurveyFK")], c("ArthropodSightingFK" = "ID")) %>%
+  left_join(surveys[, c("ID", "UserFKOfObserver")], c("SurveyFK" = "ID")) %>%
+  dplyr::select(UserFKOfObserver, ArthropodSightingFK, OriginalGroup, StandardGroup) %>%
   group_by(UserFKOfObserver) %>%
-  mutate(userSurveyNum = row_number(),
-         agreement = StandardGroup == OriginalGroup) %>%
-  filter(!OriginalGroup %in% c("unidentified", "other"), 
+  filter(!OriginalGroup %in% c("unidentified", "other", "caterpillar", "ant", "spider"), 
          !is.na(StandardGroup)) %>%
-  mutate(UserObsNum = n(), 
-         UserNumCorrect = sum(agreement), 
+  summarize(UserObsNum = n(), 
+         UserNumCorrect = sum(StandardGroup == OriginalGroup), 
          UserErrorRate = 100*(UserObsNum - UserNumCorrect)/UserObsNum) %>%
-  arrange(UserFKOfObserver) #%>%
+  arrange(desc(UserObsNum)) %>%
+  filter(UserObsNum > 5) #%>%
   # select(UserFKOfObserver, UserErrorRate)
 
 gameplayandusererrors = gameplaydf %>%
-  left_join(surveyusererrors[, c("UserErrorRate")], by = c("UserFK" = "UserFKOfObserver")) #problem: join columns in y must be present in the data???
-  # select(UserFKOfObserver, userplays, avgscore, cumErrorRate) %>%
-  # mutate(avgerrorrate = sum(cumErrorRate)/)
+  inner_join(surveyusererrors[, c("UserErrorRate", "UserFKOfObserver", "UserObsNum")], by = c("UserFK" = "UserFKOfObserver")) %>%
+  arrange(desc(UserObsNum))
 
-left_join(arthro_sight[, c("ID", "SurveyFK")], c("ArthropodSightingFK" = "ID")) 
+plot(gameplayandusererrors$avgscore, gameplayandusererrors$UserErrorRate)
 
 userTotals = gameplayandusererrors %>%
   group_by(UserFKOfObserver) %>%
