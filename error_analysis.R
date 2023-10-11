@@ -267,36 +267,38 @@ text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"],
 
 abline(a=0, b = 1)
 
-# end of analysis
-
 #Game Data Analysis - how good are people at estimating length?
 
 gameplaydf =  game %>%
-  select(ID, UserFK, Score) %>%
+  select(UserFK, Score) %>%
   group_by(UserFK) %>%
   mutate(userplays = n(), avgscore = sum(Score)/userplays) #%>%
   # left_join(arthro_sight[, c("ID", "SurveyFK")]) %>%
   # left_join(surveys[, c("ID", "ObservationMethod")], c("SurveyFK" = "ID")) 
 
 
-gameplayandusererrors = left_join(surveys, arthro_sight, by = c('ID' = 'SurveyFK')) %>%
+surveyusererrors = left_join(surveys, arthro_sight, by = c('ID' = 'SurveyFK')) %>%
   rename(ArthropodSightingFK = ID.y) %>%
   left_join(expert_ID, by = c("ArthropodSightingFK", "OriginalGroup")) %>%
   rename(SurveyID = ID.x) %>%            
-  dplyr::select(SurveyID, UserFKOfObserver, ArthropodSightingFK, OriginalGroup, Length, StandardGroup) %>%
-  arrange(SurveyID) %>%
+  dplyr::select(UserFKOfObserver, ArthropodSightingFK, OriginalGroup, Length, StandardGroup) %>%
   group_by(UserFKOfObserver) %>%
-  mutate(userSurveyNumber = row_number(),
+  mutate(userSurveyNum = row_number(),
          agreement = StandardGroup == OriginalGroup) %>%
   filter(!OriginalGroup %in% c("unidentified", "other"), 
          !is.na(StandardGroup)) %>%
-  mutate(photoObsNum = row_number(), 
-         cumNumCorrect = cumsum(agreement),
-         cumErrorRate = 100*(photoObsNum - cumNumCorrect)/photoObsNum) %>%
-  arrange(UserFKOfObserver, SurveyID) #%>%
- # left_join(gameplaydf, by = c("UserFKOfObserver" = "UserFK")) #%>%
+  mutate(UserObsNum = n(), 
+         UserNumCorrect = sum(agreement), 
+         UserErrorRate = 100*(UserObsNum - UserNumCorrect)/UserObsNum) %>%
+  arrange(UserFKOfObserver) #%>%
+  # select(UserFKOfObserver, UserErrorRate)
+
+gameplayandusererrors = gameplaydf %>%
+  left_join(surveyusererrors[, c("UserErrorRate")], by = c("UserFK" = "UserFKOfObserver")) #problem: join columns in y must be present in the data???
   # select(UserFKOfObserver, userplays, avgscore, cumErrorRate) %>%
   # mutate(avgerrorrate = sum(cumErrorRate)/)
+
+left_join(arthro_sight[, c("ID", "SurveyFK")], c("ArthropodSightingFK" = "ID")) 
 
 userTotals = gameplayandusererrors %>%
   group_by(UserFKOfObserver) %>%
