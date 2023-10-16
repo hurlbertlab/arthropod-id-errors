@@ -202,10 +202,10 @@ for (arth in arthGroupsWeWant) {
   
   arthSubset = filter(correctness_table, OriginalGroup == arth)
   
-  # Creating a logistic regression curve:
+  # Logistic regression curve:
   
    arthGLM = glm(binary ~ Length, data = arthSubset, family = "binomial")
-  # 
+
    predicted_data = data.frame(Length = seq(min(arthSubset$Length, na.rm = TRUE), max(arthSubset$Length, na.rm=TRUE)))
    
    predicted_data$binary = predict(arthGLM, predicted_data, type="response")
@@ -268,7 +268,7 @@ text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"],
 abline(a=0, b = 1)
 
 #Game Data Analysis - how good are people at estimating length?
-# filter to difficult arth groups/out 'easy' groups rather than by individual, because error rate by individual might be skewed due to 'easy' arths
+# filtered to difficult arth groups/out 'easy' groups rather than by individual, because error rate by individual might be skewed due to 'easy' arths
 
 # for each user, we want the 1st score, avg score, max score, for all 4 scores (lengths, percentfound, IDaccuracy)
 
@@ -301,11 +301,75 @@ gameplayandusererrors = gameplaydf %>%
   inner_join(surveyusererrors[, c("UserErrorRate", "UserFKOfObserver", "UserObsNum")], by = c("UserFK" = "UserFKOfObserver")) %>%
   arrange(desc(UserObsNum))
 
-plot(gameplayandusererrors$avgscore, gameplayandusererrors$UserErrorRate)
+# Plot showing AVERAGE SCORE vs. SURVEY ERROR RATE
 
-userTotals = gameplayandusererrors %>%
-  group_by(UserFKOfObserver) %>%
-  summarize(totalSurveys = max(userSurveyNumber),
-            totalPhotos = max(photoObsNum)) %>%
-  arrange(desc(totalPhotos))
+plot(gameplayandusererrors$avgscore, gameplayandusererrors$UserErrorRate, xlab = "Average Score", ylab = "Survey Error Rate (%)", main = "User's Game Score and Survey Accuracy", cex = 2, col = 'dark green')
+
+abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$avgscore), col = 'green')
+
+# each user's average LengthAccuracy predicts survey error rate?
+# put LengthAccuracy vs. ID accuracy vs. percent found to survey error rate
+
+
+# PLOT: does LengthAccuracy predict Survey Error Rate? 
+gamelengthdf = game %>%
+  select(UserFK, LengthAccuracy) %>%
+  group_by(UserFK) %>%
+  filter(!(LengthAccuracy == -1)) %>%
+  mutate(length_error = 100-LengthAccuracy) %>%
+  summarize(userplays = n(), 
+            avglengtherror = sum(length_error)/userplays)
+
+gamelength_usererrors = gamelengthdf %>%
+  inner_join(surveyusererrors[, c("UserErrorRate", "UserFKOfObserver", "UserObsNum")], by = c("UserFK" = "UserFKOfObserver")) %>%
+  arrange(desc(UserObsNum))
+
+plot(gamelength_usererrors$avglengtherror, gamelength_usererrors$UserErrorRate, xlab = "Average Game Length Error Rate", ylab = "Survey Error Rate (%)", main = "User Game Length Error and Survey Error", cex = 2)
+
+abline(lm(gamelength_usererrors$UserErrorRate~gamelength_usererrors$avglengtherror), col = 'green')
+
+# PLOT: does IDAccuracy predict Survey Error Rate?
+gameIDdf = game %>%
+  select(UserFK, IdentificationAccuracy) %>%
+  group_by(UserFK) %>%
+  filter(!(IdentificationAccuracy == -1)) %>%
+  mutate(ID_error = 100-IdentificationAccuracy) %>%
+  summarize(userplays = n(), 
+            avgIDerror = sum(ID_error)/userplays)
+
+gameID_usererrors = gameIDdf %>%
+  inner_join(surveyusererrors[, c("UserErrorRate", "UserFKOfObserver", "UserObsNum")], by = c("UserFK" = "UserFKOfObserver")) %>%
+  arrange(desc(UserObsNum))
+
+plot(gameID_usererrors$avgIDerror, gameID_usererrors$UserErrorRate, xlab = "Average Game ID Error Rate", ylab = "Survey Error Rate (%)", main = "User Game ID Error and Survey Error", cex = 2)
+
+abline(lm(gameID_usererrors$UserErrorRate~gameID_usererrors$avgIDerror), col = 'green')
+
+#PLOT: Does PercentFound predict Survey Error Rate?
+gamefounddf = game %>%
+  select(UserFK, PercentFound) %>%
+  group_by(UserFK) %>%
+  filter(!(PercentFound == -1)) %>%
+  mutate(found_error = 100-PercentFound) %>%
+  summarize(userplays = n(), 
+            avgfounderror = sum(found_error)/userplays)
+
+gamefound_usererrors = gamefounddf %>%
+  inner_join(surveyusererrors[, c("UserErrorRate", "UserFKOfObserver", "UserObsNum")], by = c("UserFK" = "UserFKOfObserver")) %>%
+  arrange(desc(UserObsNum))
+
+plot(gamefound_usererrors$avgfounderror, gamefound_usererrors$UserErrorRate, xlab = "Average Found ID Error Rate", ylab = "Survey Error Rate (%)", main = "User Game Percent Found and Survey Error", cex = 2)
+
+abline(lm(gamefound_usererrors$UserErrorRate~gamefound_usererrors$avgfounderror), col = 'green')
+
+# improvement over time (per game plays) for users who played the game.
+# plot: mutate for counts rows for each user = # of game plays
+
+
+# dont remember what this is for...
+#userTotals = gameplayandusererrors %>%
+#   group_by(UserFK) %>%
+#   summarize(totalSurveys = max(userSurveyNumber),
+#             totalPhotos = max(photoObsNum)) %>%
+#   arrange(desc(totalPhotos))
 
