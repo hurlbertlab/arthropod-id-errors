@@ -363,9 +363,18 @@ plot(gamefound_usererrors$avgfounderror, gamefound_usererrors$UserErrorRate, xla
 abline(lm(gamefound_usererrors$UserErrorRate~gamefound_usererrors$avgfounderror), col = 'green')
 
 # improvement over time (per game plays) for users who played the game.
-# plot: mutate for counts rows for each user = # of game plays
+# plot: mutate for count rows for each user = # of game plays
 
+overtime = game %>%
+  group_by(UserFK) %>%
+  mutate(playnumber = count(game, UserFK))
 
+for (UserFK in overtime) {
+  
+  plot(overtime$playnumber, overtime$Score)
+  
+}
+                                        
 # dont remember what this is for...
 #userTotals = gameplayandusererrors %>%
 #   group_by(UserFK) %>%
