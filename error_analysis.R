@@ -221,7 +221,7 @@ for (arth in arthGroupsWeWant) {
    plot(jitter(arthSubset$Length, .6), arthSubset$binary,
         main = arth, xlab = "", las = 1, yaxt = "n", ylab = "")
    
-   mtext("Incorrect <------> Correct", 2, line = .5, cex = .8)
+   mtext("Incorrect <------> Correct", 2, line = .5, cex = .5)
         
    lines(binary ~ Length, predicted_data, lwd=2, col="green")
    
@@ -234,7 +234,7 @@ for (arth in arthGroupsWeWant) {
    text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0("slope = ", slope, pstar))
 
 }
-mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 2)
+mtext("Length (mm)", 1, cex = 1.5, outer = TRUE, line = 1)
 
 
   # Plot glm predicted response curve using example code here:
@@ -247,7 +247,7 @@ correctness_plot = correctness_table %>%
   filter(correctness_table$OriginalGroup %in% 'ant') %>%
   logi.hist.plot(Length, agreement)
 
-# Beat sheet / Visual Survey Accuracy Comparison
+############## Beat sheet / Visual Survey Accuracy Comparison #############
 
 # 1
 # join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
@@ -301,7 +301,7 @@ gameplayandusererrors = gameplaydf %>%
   inner_join(surveyusererrors[, c("UserErrorRate", "UserFKOfObserver", "UserObsNum")], by = c("UserFK" = "UserFKOfObserver")) %>%
   arrange(desc(UserObsNum))
 
-# Plot showing AVERAGE SCORE vs. SURVEY ERROR RATE
+######## Plot showing AVERAGE SCORE vs. SURVEY ERROR RATE#########
 
 plot(gameplayandusererrors$avgscore, gameplayandusererrors$UserErrorRate, xlab = "Average Score", ylab = "Survey Error Rate (%)", main = "User's Game Score and Survey Accuracy", cex = 2, col = 'dark green')
 
@@ -311,7 +311,7 @@ abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$avgscore), c
 # put LengthAccuracy vs. ID accuracy vs. percent found to survey error rate
 
 
-# PLOT: does LengthAccuracy predict Survey Error Rate? 
+########## PLOT: does LengthAccuracy predict Survey Error Rate? ######
 gamelengthdf = game %>%
   select(UserFK, LengthAccuracy) %>%
   group_by(UserFK) %>%
@@ -328,7 +328,7 @@ plot(gamelength_usererrors$avglengtherror, gamelength_usererrors$UserErrorRate, 
 
 abline(lm(gamelength_usererrors$UserErrorRate~gamelength_usererrors$avglengtherror), col = 'green')
 
-# PLOT: does IDAccuracy predict Survey Error Rate?
+######### PLOT: does IDAccuracy predict Survey Error Rate? ########
 gameIDdf = game %>%
   select(UserFK, IdentificationAccuracy) %>%
   group_by(UserFK) %>%
@@ -345,7 +345,7 @@ plot(gameID_usererrors$avgIDerror, gameID_usererrors$UserErrorRate, xlab = "Aver
 
 abline(lm(gameID_usererrors$UserErrorRate~gameID_usererrors$avgIDerror), col = 'green')
 
-#PLOT: Does PercentFound predict Survey Error Rate?
+#########PLOT: Does PercentFound predict Survey Error Rate? ########
 gamefounddf = game %>%
   select(UserFK, PercentFound) %>%
   group_by(UserFK) %>%
@@ -362,16 +362,20 @@ plot(gamefound_usererrors$avgfounderror, gamefound_usererrors$UserErrorRate, xla
 
 abline(lm(gamefound_usererrors$UserErrorRate~gamefound_usererrors$avgfounderror), col = 'green')
 
-# improvement over time (per game plays) for users who played the game.
-# plot: mutate for count rows for each user = # of game plays
+################## PLOT: IMPROVEMENT OVER TIME (GAME) ############
+####### mutate for count rows for each user = # of game plays ##
+
+# want to connect a line through each user !
 
 overtime = game %>%
   group_by(UserFK) %>%
-  mutate(playnumber = count(game, UserFK))
+  mutate(playnumber = cur_group_id())
 
 for (UserFK in overtime) {
   
-  plot(overtime$playnumber, overtime$Score)
+  plot(overtime$playnumber, overtime$Score, main = "Users' Improvement Over Gameplay", xlab = "Number of Plays", ylab = "Score")
+  
+  lines(overtime$playnumber, overtime$Score)
   
 }
                                         
