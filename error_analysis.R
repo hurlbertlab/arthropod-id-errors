@@ -365,7 +365,7 @@ userCounts = count(game, UserFK) %>%
 
 overtime = game %>%
   filter(UserFK %in% userCounts$UserFK[userCounts$n >= 5],
-         !UserFK %in% c(25, 26), # filter to multi-play users
+         !UserFK %in% c(25, 26, 2803), # filter to multi-play users
          PercentFound != -1,
          Score > 500) %>%  #filtering because these scores are likely incomplete gameplays
   group_by(UserFK) %>% 
@@ -392,26 +392,78 @@ mtext("Number of Gameplays", 1, cex = 1.4, outer = TRUE, line = 1)
 
 
 # line through each user (incomplete/work in progress)
-par(mfrow = c(2, 4))
+par(mfrow = c(2,2), mar = c(3, 4, 1, 1), mgp = c(2.5, .5, 0), oma= c(3, 0, 0, 0))
 
-plot(overtime$playnumber, overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "Number game plays")
+#get rid of filter of percentfound = -1 to include more data points for
+# total game score plot (use 'Score')
+
+#Total game score plot
+plot(overtime$playnumber, overtime$Score, pch = 16, type = 'n', las = 1, ylab ="Score", xlab = "")
 
 userList = unique(overtime$UserFK)
 
 i = 0
-for (user in userList[c(1:5, 7:8)]) {
+for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
+  i = i + 1
+  tmp = overtime %>%
+    filter(UserFK == user)
+  
+  points(tmp$playnumber, tmp$Score, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
+  
+}
+
+#PercentFound plot
+plot(overtime$playnumber, overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "")
+
+userList = unique(overtime$UserFK)
+
+i = 0
+for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
   i = i + 1
   tmp = overtime %>%
     filter(UserFK == user)
   
   points(tmp$playnumber, tmp$PercentFound, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
   
-  #lines(overtime$playnumber[overtime$UserFK], overtime$PercentFound[overtime$UserFK], col = (randomColor()))
+}
+
+#LengthAccuracy plot
+plot(overtime$playnumber, overtime$LengthAccuracy, pch = 16, type = 'n', las = 1, ylab ="Length Accuracy", xlab = "")
+
+userList = unique(overtime$UserFK)
+
+i = 0
+for (user in userList) {
+  i = i + 1
+  tmp = overtime %>%
+    filter(UserFK == user)
   
-  #errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"]
+  points(tmp$playnumber, tmp$LengthAccuracy, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
   
 }
 
+#ID Accuracy Plot
+plot(overtime$playnumber, overtime$IdentificationAccuracy, pch = 16, type = 'n', las = 1, ylab ="ID Accuracy", xlab = "")
+
+userList = unique(overtime$UserFK)
+
+i = 0
+for (user in userList) {
+  i = i + 1
+  tmp = overtime %>%
+    filter(UserFK == user)
+  
+  points(tmp$playnumber, tmp$IdentificationAccuracy, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
+  
+}
+
+mtext("Number of game plays", 1, outer = TRUE, cex = 1.5)
+
+# in each loop:
+# scoretest = cor.test(overtime$playnumber, overtime$Score, method = "spearman")
+# text(8, 50, paste("r =",round(scoretest$estimate,2)))
+
+###########################################
 # create for loop across a set of users, for each user, plot(playnumber, GameScore)
 
 par(mfrow = c(3, 4))
