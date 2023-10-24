@@ -376,26 +376,35 @@ par(mfrow = c(2,2), mar=c(2.5,5,2,1), oma = c(4, 1, 1, 1))
 #PercentFound plot
 plot(overtime$playnumber, overtime$PercentFound, pch = 16, xlab = "", ylab = "Percent Found")
 
-lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
+#lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
 
 # ID Accuracy Plot
 plot(overtime$playnumber, overtime$IdentificationAccuracy, pch = 16, xlab = "", ylab = "ID Accuracy")
 
-lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
+#lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
 
 # LengthAccuracy Plot
 plot(overtime$playnumber, overtime$LengthAccuracy, pch = 16, xlab = "", ylab = "Length Accuracy")
 
-lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
+#lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
 
 mtext("Number of Gameplays", 1, cex = 1.4, outer = TRUE, line = 1)
 
 
 # line through each user (incomplete/work in progress)
+par(mfrow = c(2, 4))
 
-for (UserFk in overtime) {
+plot(overtime$playnumber, overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "Number game plays")
+
+userList = unique(overtime$UserFK)
+
+i = 0
+for (user in userList[c(1:5, 7:8)]) {
+  i = i + 1
+  tmp = overtime %>%
+    filter(UserFK == user)
   
-  lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
+  points(tmp$playnumber, tmp$PercentFound, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
   
   #lines(overtime$playnumber[overtime$UserFK], overtime$PercentFound[overtime$UserFK], col = (randomColor()))
   
@@ -407,7 +416,7 @@ for (UserFk in overtime) {
 
 par(mfrow = c(3, 4))
 
-for (UserFK in overtime) {
+for (user in ) {
   
   plot(overtime$playnumber[overtime$UserFK], overtime$Score[overtime$UserFK], xlim = 15)
 }
