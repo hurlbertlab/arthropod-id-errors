@@ -145,12 +145,6 @@ commonness = ggplot(standard_total_id, aes(y=total_ID, x=StandardGroup)) +
        title = "How Often are Arthropods Spotted") +
   theme(axis.text.x = element_text(size = 6))
 
-
-# table: surveys, observations, photos
-# graph: user error rates over time
-# graph: calculate arthropod group-specific error rates
-
-
 # LENGTH ANALYSIS
 
 # lengthdf = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>%
@@ -366,46 +360,35 @@ userCounts = count(game, UserFK) %>%
 overtime = game %>%
   filter(UserFK %in% userCounts$UserFK[userCounts$n >= 5],
          !UserFK %in% c(25, 26, 2803), # filter to multi-play users
-         PercentFound != -1,
+         PercentFound != -1, 
          Score > 500) %>%  #filtering because these scores are likely incomplete gameplays
   group_by(UserFK) %>% 
   mutate(playnumber = row_number())
 
+overtime_for_score = game %>% #scores with no subscores are included here
+  filter(UserFK %in% userCounts$UserFK[userCounts$n >= 5],
+         !UserFK %in% c(25, 26, 2803), # filter to multi-play users
+         #PercentFound != -1, 
+         Score > 500) %>%  #filtering because these scores are likely incomplete gameplays
+  group_by(UserFK) %>% 
+  mutate(playnumber = row_number())
+
+############### PLOTS: improvement over time by game sub score #################
+
 par(mfrow = c(2,2), mar=c(2.5,5,2,1), oma = c(4, 1, 1, 1))
-
-#PercentFound plot
-plot(overtime$playnumber, overtime$PercentFound, pch = 16, xlab = "", ylab = "Percent Found")
-
-#lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
-
-# ID Accuracy Plot
-plot(overtime$playnumber, overtime$IdentificationAccuracy, pch = 16, xlab = "", ylab = "ID Accuracy")
-
-#lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
-
-# LengthAccuracy Plot
-plot(overtime$playnumber, overtime$LengthAccuracy, pch = 16, xlab = "", ylab = "Length Accuracy")
-
-#lines(overtime$playnumber, overtime$PercentFound, col = rainbow(17))
-
-mtext("Number of Gameplays", 1, cex = 1.4, outer = TRUE, line = 1)
-
-
-# line through each user (incomplete/work in progress)
-par(mfrow = c(2,2), mar = c(3, 4, 1, 1), mgp = c(2.5, .5, 0), oma= c(3, 0, 0, 0))
-
-#get rid of filter of percentfound = -1 to include more data points for
-# total game score plot (use 'Score')
+element_text(family = "serif", face = "bold")
 
 #Total game score plot
-plot(overtime$playnumber, overtime$Score, pch = 16, type = 'n', las = 1, ylab ="Score", xlab = "")
+plot(overtime_for_score$playnumber, overtime_for_score$Score, pch = 16, type = 'n', las = 1, ylab ="Score", xlab = "")
 
-userList = unique(overtime$UserFK)
+element_text(family = "serif", face = "bold")
+
+userList = unique(overtime_for_score$UserFK)
 
 i = 0
 for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
   i = i + 1
-  tmp = overtime %>%
+  tmp = overtime_for_score %>%
     filter(UserFK == user)
   
   points(tmp$playnumber, tmp$Score, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
@@ -457,22 +440,106 @@ for (user in userList) {
   
 }
 
-mtext("Number of game plays", 1, outer = TRUE, cex = 1.5)
+mtext("Number of Game Plays", 1, outer = TRUE, cex = 1.5, line = 1.5)
 
 # in each loop:
 # scoretest = cor.test(overtime$playnumber, overtime$Score, method = "spearman")
 # text(8, 50, paste("r =",round(scoretest$estimate,2)))
 
-###########################################
-# create for loop across a set of users, for each user, plot(playnumber, GameScore)
+################### PLOTS: improvement over time for EACH USER #################
 
-par(mfrow = c(3, 4))
+# Total Score over time for each user
+userList = unique(overtime$UserFK)
 
-for (user in ) {
+par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
+
+for (user in userList) {
+  tmp = overtime %>%
+    filter(UserFK == user)
   
-  plot(overtime$playnumber[overtime$UserFK], overtime$Score[overtime$UserFK], xlim = 15)
+  plot(tmp$playnumber, tmp$Score, xlab = "", ylab = "", main = user)
+  
 }
+ mtext("Number of GamePlays", 1, outer = TRUE, cex = 1.5, line = 1.5)
+ 
+ mtext("Score", 2, outer = TRUE, cex = 1.5, line = -0.5)
+ 
+ 
+# Percent found over time for each user
+userList = unique(overtime$UserFK)
+ 
+par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
+ 
+for (user in userList) {
+  tmp = overtime %>%
+  filter(UserFK == user)
+  
+  plot(tmp$playnumber, tmp$PercentFound, xlab = "", ylab = "", main = user)
+   
+ }
 
-# make a different loop for each variable (GameScore) you want to visualize
+mtext("Number of GamePlays", 1, outer = TRUE, cex = 1.5, line = 1.5)
+ 
+mtext("Percent Found", 2, outer = TRUE, cex = 1.5, line = -0.5)
+
+
+# Length Accuracy over time - each user
+userList = unique(overtime$UserFK)
+
+par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
+
+for (user in userList) {
+  tmp = overtime %>%
+    filter(UserFK == user)
+  
+  plot(tmp$playnumber, tmp$LengthAccuracy, xlab = "", ylab = "", main = user)
+  
+}
+mtext("Number of GamePlays", 1, outer = TRUE, cex = 1.5, line = 1.5)
+
+mtext("Length Accuracy", 2, outer = TRUE, cex = 1.5, line = -0.5)
+
+
+# ID Accuracy over time - each user 
+userList = unique(overtime$UserFK)
+
+par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
+
+for (user in userList) {
+  tmp = overtime %>%
+    filter(UserFK == user)
+  
+  plot(tmp$playnumber, tmp$IdentificationAccuracy, xlab = "", ylab = "", main = user)
+  
+}
+mtext("Number of GamePlays", 1, outer = TRUE, cex = 1.5, line = 1.5)
+
+mtext("ID Accuracy", 2, outer = TRUE, cex = 1.5, line = -0.5)
+
+# does practicing with the game improve survey score? analyze time stamps
+# relative to survey submission timestamps (doing the survey before/after the game)
+# compare timestamps of users in expert ID vs those users and their gamescores
+
+############################# TIMESTAMP ANALYSIS ###############################
+
+timestampdf = expert_ID %>%
+  left_join(surveys[, c("ID", "UserFKOfObserver", "LocalDate", "LocalTime")], c("ArthropodSightingFK" = "ID")) %>%
+  select("OriginalGroup", "StandardGroup", "UserFKOfObserver", "LocalDate", "LocalTime") %>%
+  group_by(UserFKOfObserver) %>%
+  mutate(correct = OriginalGroup == StandardGroup) %>%
+  filter(UserFKOfObserver == 2066) #the other users don't have (much) survey data! 
+  
+gamescoresdf = game %>%
+  select("UserFK", "Score", "Timestamp") %>%
+  filter(UserFK == 2066, 
+         Score != 0)
+
+
+  
+  
+  #left_join(game[, c("UserFK", "Score", "Timestamp"])
+  
+  
+  
 
 
