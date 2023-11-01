@@ -354,21 +354,32 @@ abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$best_pct_fou
 
 ################## PLOT: IMPROVEMENT OVER TIME (GAME) ################
 
-userCounts = count(game, UserFK) %>%
+# gameplays without subscores
+userCounts = game %>%
+  filter(Score > 500) %>% #filtering because these scores are likely incomplete gameplays
+  dplyr::count(UserFK) %>%
   arrange(desc(n))
 
-overtime = game %>%
-  filter(UserFK %in% userCounts$UserFK[userCounts$n >= 5],
-         !UserFK %in% c(25, 26, 2803), # filter to multi-play users
+# gameplays with subscores
+userCounts_filtered = game %>%
+  filter(PercentFound != -1,
+         Score > 500) %>%
+  count(UserFK) %>%
+  arrange(desc(n))
+
+# filters out before subscores were measured
+subscores_overtime = game %>%
+  filter(UserFK %in% userCounts$UserFK[userCounts$n >= 4],
+         !UserFK %in% c(25, 26), # filter to multi-play users
          PercentFound != -1, 
-         Score > 500) %>%  #filtering because these scores are likely incomplete gameplays
+         Score > 500) %>% #filtering because these scores are likely incomplete gameplays
   group_by(UserFK) %>% 
   mutate(playnumber = row_number())
 
-overtime_for_score = game %>% #scores with no subscores are included here
-  filter(UserFK %in% userCounts$UserFK[userCounts$n >= 5],
-         !UserFK %in% c(25, 26, 2803), # filter to multi-play users
-         #PercentFound != -1, 
+# keeps scores from before subscores were measured
+scores_overtime = game %>% #scores with no subscores are included here
+  filter(UserFK %in% userCounts$UserFK[userCounts$n >= 4],
+         !UserFK %in% c(25, 26), # filter to multi-play users
          Score > 500) %>%  #filtering because these scores are likely incomplete gameplays
   group_by(UserFK) %>% 
   mutate(playnumber = row_number())
@@ -379,31 +390,31 @@ par(mfrow = c(2,2), mar=c(2.5,5,2,1), oma = c(4, 1, 1, 1))
 element_text(family = "serif", face = "bold")
 
 #Total game score plot
-plot(overtime_for_score$playnumber, overtime_for_score$Score, pch = 16, type = 'n', las = 1, ylab ="Score", xlab = "")
+plot(scores_overtime$playnumber, scores_overtime$Score, pch = 16, type = 'n', las = 1, ylab ="Score", xlab = "")
 
 element_text(family = "serif", face = "bold")
 
-userList = unique(overtime_for_score$UserFK)
+userList_score = unique(scores_overtime$UserFK)
 
 i = 0
-for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
+for (user in userList_score) { 
   i = i + 1
-  tmp = overtime_for_score %>%
+  tmp = scores_overtime %>%
     filter(UserFK == user)
   
-  points(tmp$playnumber, tmp$Score, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
+  points(tmp$playnumber, tmp$Score, pch = 16, type = 'l', col = rainbow(length(userList_score))[i], lwd = 3)
   
 }
 
 #PercentFound plot
-plot(overtime$playnumber, overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "")
+plot(subscores_overtime$playnumber, overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "")
 
 userList = unique(overtime$UserFK)
 
 i = 0
 for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
   i = i + 1
-  tmp = overtime %>%
+  tmp = subscores_overtime%>%
     filter(UserFK == user)
   
   points(tmp$playnumber, tmp$PercentFound, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
@@ -418,7 +429,7 @@ userList = unique(overtime$UserFK)
 i = 0
 for (user in userList) {
   i = i + 1
-  tmp = overtime %>%
+  tmp = subscores_overtime%>%
     filter(UserFK == user)
   
   points(tmp$playnumber, tmp$LengthAccuracy, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
@@ -433,7 +444,7 @@ userList = unique(overtime$UserFK)
 i = 0
 for (user in userList) {
   i = i + 1
-  tmp = overtime %>%
+  tmp = subscores_overtime%>%
     filter(UserFK == user)
   
   points(tmp$playnumber, tmp$IdentificationAccuracy, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
@@ -442,6 +453,8 @@ for (user in userList) {
 
 mtext("Number of Game Plays", 1, outer = TRUE, cex = 1.5, line = 1.5)
 
+# calculate correlations - add correlation coefficient "r ="
+
 # in each loop:
 # scoretest = cor.test(overtime$playnumber, overtime$Score, method = "spearman")
 # text(8, 50, paste("r =",round(scoretest$estimate,2)))
@@ -449,71 +462,65 @@ mtext("Number of Game Plays", 1, outer = TRUE, cex = 1.5, line = 1.5)
 ################### PLOTS: improvement over time for EACH USER #################
 
 # Total Score over time for each user
-userList = unique(overtime$UserFK)
+scores_userList = unique(scores_overtime$UserFK)
 
 par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
 
-for (user in userList) {
-  tmp = overtime %>%
+for (user in scores_userList) {
+  tmp = scores_overtime %>%
     filter(UserFK == user)
   
-  plot(tmp$playnumber, tmp$Score, xlab = "", ylab = "", main = user)
+  plot(tmp$playnumber, tmp$Score, xlab = "", ylab = "", main = user, type = "l")
   
 }
  mtext("Number of GamePlays", 1, outer = TRUE, cex = 1.5, line = 1.5)
  
- mtext("Score", 2, outer = TRUE, cex = 1.5, line = -0.5)
+ mtext("Total Score", 2, outer = TRUE, cex = 1.5, line = -0.5)
  
  
 # Percent found over time for each user
-userList = unique(overtime$UserFK)
+subscores_userList = unique(subscores_overtime$UserFK)
  
 par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
  
-for (user in userList) {
-  tmp = overtime %>%
+for (user in subscores_userList) {
+  tmp = subscores_overtime %>%
   filter(UserFK == user)
   
-  plot(tmp$playnumber, tmp$PercentFound, xlab = "", ylab = "", main = user)
+  plot(tmp$playnumber, tmp$PercentFound, xlab = "", ylab = "", main = user, type = "l")
    
  }
 
 mtext("Number of GamePlays", 1, outer = TRUE, cex = 1.5, line = 1.5)
- 
 mtext("Percent Found", 2, outer = TRUE, cex = 1.5, line = -0.5)
 
+# these have less than 5 gameplays! error in filter somewhere (applies to all subscores throughout this part)
 
 # Length Accuracy over time - each user
-userList = unique(overtime$UserFK)
-
 par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
 
-for (user in userList) {
-  tmp = overtime %>%
+for (user in subscores_userList) {
+  tmp = subscores_overtime %>%
     filter(UserFK == user)
   
-  plot(tmp$playnumber, tmp$LengthAccuracy, xlab = "", ylab = "", main = user)
+  plot(tmp$playnumber, tmp$LengthAccuracy, xlab = "", ylab = "", main = user, type = "l")
   
 }
 mtext("Number of GamePlays", 1, outer = TRUE, cex = 1.5, line = 1.5)
-
 mtext("Length Accuracy", 2, outer = TRUE, cex = 1.5, line = -0.5)
 
 
 # ID Accuracy over time - each user 
-userList = unique(overtime$UserFK)
-
 par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
 
-for (user in userList) {
-  tmp = overtime %>%
+for (user in subscores_userList) {
+  tmp = subscores_overtime %>%
     filter(UserFK == user)
   
-  plot(tmp$playnumber, tmp$IdentificationAccuracy, xlab = "", ylab = "", main = user)
+  plot(tmp$playnumber, tmp$IdentificationAccuracy, xlab = "", ylab = "", main = user, type = "l")
   
 }
 mtext("Number of GamePlays", 1, outer = TRUE, cex = 1.5, line = 1.5)
-
 mtext("ID Accuracy", 2, outer = TRUE, cex = 1.5, line = -0.5)
 
 # does practicing with the game improve survey score? analyze time stamps
