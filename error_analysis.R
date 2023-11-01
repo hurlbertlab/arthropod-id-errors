@@ -8,6 +8,7 @@ library(ggplot2)
 library(forcats)
 library(popbio)
 library(ggpubr)
+library(lubridate)
 
 # Read in raw data
 expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
@@ -533,14 +534,33 @@ timestampdf = expert_ID %>%
   left_join(surveys[, c("ID", "UserFKOfObserver", "LocalDate", "LocalTime")], c("ArthropodSightingFK" = "ID")) %>%
   select("OriginalGroup", "StandardGroup", "UserFKOfObserver", "LocalDate", "LocalTime") %>%
   group_by(UserFKOfObserver) %>%
-  mutate(correct = OriginalGroup == StandardGroup) %>%
-  filter(UserFKOfObserver == 2066) #the other users don't have (much) survey data! 
-  
+  mutate(correct = OriginalGroup == StandardGroup,
+         doy = yday(LocalDate))
+
+
+
 gamescoresdf = game %>%
   select("UserFK", "Score", "Timestamp") %>%
-  filter(UserFK == 2066, 
-         Score != 0)
+  mutate(doy = yday(Timestamp))
 
+# 1a) Figure out how to extract Year from the date field and create a new column for it
+# 1b) Then create yearday = Year + (doy/365) for both timestampdf and gamescoresdf, and use as x-axis below
+
+# 2) need to create a new vector of users for people that have BOTH played game AND done surveys and use that in the for loop
+
+
+par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
+for (user in userList_score) {
+  
+  tmp1 = filter(timestampdf, UserFKOfObserver == user)
+  tmp2 = filter(gamescoresdf, UserFK == user)
+  
+  # plot surveys
+  plot(tmp1$doy, rep(1, nrow(tmp1)), pch = 17, col = 'red', xlim = c(0, 365), xlab = "day of year", ylab = "", yaxt = "n", main = user)
+  
+  # plot game play dates
+  points(tmp2$doy, rep(1, nrow(tmp2)), pch = 16, col = 'blue')
+}
 
   
   
