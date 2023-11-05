@@ -353,7 +353,7 @@ abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$best_pct_fou
 #######################################################################
 
 
-################## PLOT: IMPROVEMENT OVER TIME (GAME) ################
+################## PLOT: IMPROVEMENT OVER TIME (GAME)################
 
 # gameplays without subscores
 userCounts = game %>%
@@ -408,9 +408,9 @@ for (user in userList_score) {
 }
 
 #PercentFound plot
-plot(subscores_overtime$playnumber, overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "")
+plot(subscores_overtime$playnumber, subscores_overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "")
 
-userList = unique(overtime$UserFK)
+userList = unique(subscores_overtime$UserFK)
 
 i = 0
 for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
@@ -423,9 +423,9 @@ for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
 }
 
 #LengthAccuracy plot
-plot(overtime$playnumber, overtime$LengthAccuracy, pch = 16, type = 'n', las = 1, ylab ="Length Accuracy", xlab = "")
+plot(subscores_overtime$playnumber, subscores_overtime$LengthAccuracy, pch = 16, type = 'n', las = 1, ylab ="Length Accuracy", xlab = "")
 
-userList = unique(overtime$UserFK)
+userList = unique(subscores_overtime$UserFK)
 
 i = 0
 for (user in userList) {
@@ -438,9 +438,9 @@ for (user in userList) {
 }
 
 #ID Accuracy Plot
-plot(overtime$playnumber, overtime$IdentificationAccuracy, pch = 16, type = 'n', las = 1, ylab ="ID Accuracy", xlab = "")
+plot(subscores_overtime$playnumber, subscores_overtime$IdentificationAccuracy, pch = 16, type = 'n', las = 1, ylab ="ID Accuracy", xlab = "")
 
-userList = unique(overtime$UserFK)
+userList = unique(subscores_overtime$UserFK)
 
 i = 0
 for (user in userList) {
@@ -535,13 +535,15 @@ timestampdf = expert_ID %>%
   select("OriginalGroup", "StandardGroup", "UserFKOfObserver", "LocalDate", "LocalTime") %>%
   group_by(UserFKOfObserver) %>%
   mutate(correct = OriginalGroup == StandardGroup,
-         doy = yday(LocalDate))
-
-
+         doy = yday(LocalDate), 
+         Year = as.numeric(substr(LocalDate, 1, 4)),
+         yearday = Year + doy)
 
 gamescoresdf = game %>%
   select("UserFK", "Score", "Timestamp") %>%
-  mutate(doy = yday(Timestamp))
+  mutate(doy = yday(Timestamp), 
+         Year = as.numeric(substr(Timestamp, 1, 4)),
+         yearday = Year + doy)
 
 # 1a) Figure out how to extract Year from the date field and create a new column for it
 # 1b) Then create yearday = Year + (doy/365) for both timestampdf and gamescoresdf, and use as x-axis below
@@ -550,23 +552,17 @@ gamescoresdf = game %>%
 
 
 par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
-for (user in userList_score) {
+
+for (user in userCounts_filtered) {
   
-  tmp1 = filter(timestampdf, UserFKOfObserver == user)
+  tmp1 = filter(timestampdf, UserFKOfObserver %in% user)
   tmp2 = filter(gamescoresdf, UserFK == user)
   
   # plot surveys
-  plot(tmp1$doy, rep(1, nrow(tmp1)), pch = 17, col = 'red', xlim = c(0, 365), xlab = "day of year", ylab = "", yaxt = "n", main = user)
+  plot(tmp1$yearday, rep(1, nrow(tmp1)), pch = 17, col = 'red', xlab = "day of year", ylab = "", yaxt = "n", main = user)
   
   # plot game play dates
-  points(tmp2$doy, rep(1, nrow(tmp2)), pch = 16, col = 'blue')
+  points(tmp2$yearday, rep(1, nrow(tmp2)), pch = 16, col = 'blue')
 }
-
-  
-  
-  #left_join(game[, c("UserFK", "Score", "Timestamp"])
-  
-  
-  
 
 
