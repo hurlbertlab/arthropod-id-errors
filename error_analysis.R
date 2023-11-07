@@ -553,7 +553,7 @@ gamescoresdf = game %>%
   select("UserFK", "Score", "Timestamp") %>%
   mutate(doy = yday(Timestamp), 
          Year = as.numeric(substr(Timestamp, 1, 4)),
-         yearday = Year + doy)
+         yearday = Year + doy/365)
 
 # 1a) Figure out how to extract Year from the date field and create a new column for it
 # 1b) Then create yearday = Year + (doy/365) for both timestampdf and gamescoresdf, and use as x-axis below
@@ -568,7 +568,7 @@ game_and_survey = left_join(userCounts_filtered, userCounts_filtered_surveys, by
   filter(n.x > 2, n.y > 2)
   
 par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
-for (user in game_and_survey) {
+for (user in game_and_survey$UserFK) {
   
   df1 = timestampdf %>%
     filter(UserFKOfObserver %in% user) #2066
