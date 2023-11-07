@@ -8,7 +8,7 @@ library(ggplot2)
 library(forcats)
 library(popbio)
 library(ggpubr)
-library(lubridate)
+library(lubridate) #built under R version 4.3.2
 
 # Read in raw data
 expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
@@ -368,7 +368,7 @@ userCounts_filtered = game %>%
   count(UserFK) %>%
   arrange(desc(n))
 
-# filters out before subscores were measured
+# filters out scores before subscores were measured
 subscores_overtime = game %>%
   filter(UserFK %in% userCounts$UserFK[userCounts$n >= 4],
          !UserFK %in% c(25, 26), # filter to multi-play users
@@ -407,6 +407,10 @@ for (user in userList_score) {
   
 }
 
+scoretest = cor.test(scores_overtime$playnumber, scores_overtime$Score, method = "spearman", exact = FALSE)
+
+text(14, 1550, paste("r =", round(scoretest$estimate,2)))
+
 #PercentFound plot
 plot(subscores_overtime$playnumber, subscores_overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "")
 
@@ -420,7 +424,11 @@ for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
   
   points(tmp$playnumber, tmp$PercentFound, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
   
+  
 }
+
+scoretest = cor.test(subscores_overtime$playnumber, subscores_overtime$PercentFound, method = "spearman", exact = FALSE)
+text(8, 50, paste("r =",round(scoretest$estimate,2)))
 
 #LengthAccuracy plot
 plot(subscores_overtime$playnumber, subscores_overtime$LengthAccuracy, pch = 16, type = 'n', las = 1, ylab ="Length Accuracy", xlab = "")
@@ -435,7 +443,11 @@ for (user in userList) {
   
   points(tmp$playnumber, tmp$LengthAccuracy, pch = 16, type = 'l', col = rainbow(8)[i], lwd = 3)
   
+  
 }
+
+scoretest = cor.test(subscores_overtime$playnumber, subscores_overtime$LengthAccuracy, method = "spearman", exact = FALSE)
+text(8, 50, paste("r =",round(scoretest$estimate,2)))
 
 #ID Accuracy Plot
 plot(subscores_overtime$playnumber, subscores_overtime$IdentificationAccuracy, pch = 16, type = 'n', las = 1, ylab ="ID Accuracy", xlab = "")
@@ -452,13 +464,11 @@ for (user in userList) {
   
 }
 
+scoretest = cor.test(subscores_overtime$playnumber, subscores_overtime$IdentificationAccuracy, method = "spearman", exact = FALSE)
+text(8, 50, paste("r =",round(scoretest$estimate,2)))
+
 mtext("Number of Game Plays", 1, outer = TRUE, cex = 1.5, line = 1.5)
 
-# calculate correlations - add correlation coefficient "r ="
-
-# in each loop:
-# scoretest = cor.test(overtime$playnumber, overtime$Score, method = "spearman")
-# text(8, 50, paste("r =",round(scoretest$estimate,2)))
 
 ################### PLOTS: improvement over time for EACH USER #################
 
@@ -550,19 +560,32 @@ gamescoresdf = game %>%
 
 # 2) need to create a new vector of users for people that have BOTH played game AND done surveys and use that in the for loop
 
+userCounts_filtered_surveys = surveys %>%
+  count(UserFKOfObserver) %>%
+  arrange(desc(n))
 
-par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
-
-for (user in userCounts_filtered) {
+game_and_survey = left_join(userCounts_filtered, userCounts_filtered_surveys, by = c("UserFK" = "UserFKOfObserver")) %>%
+  filter(n.x > 2, n.y > 2)
   
-  tmp1 = filter(timestampdf, UserFKOfObserver %in% user)
-  tmp2 = filter(gamescoresdf, UserFK == user)
+par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
+for (user in game_and_survey) {
+  
+  df1 = timestampdf %>%
+    filter(UserFKOfObserver %in% user) #2066
+  df2 = gamescoresdf %>%
+    filter(UserFK %in% user)
+  
+  plot(df1$yearday, rep(1, nrow(df1)), pch = 17, col = 'red', xlab = 'Day', ylab = '', yaxt = 'n')
+  
+  points(df2$yearday, rep(1, nrow(df2)), col = 'blue')
+  
+  #tmp1 = filter(timestampdf, UserFKOfObserver %in% user)
+  #tmp2 = filter(gamescoresdf, UserFK %in% user)
   
   # plot surveys
-  plot(tmp1$yearday, rep(1, nrow(tmp1)), pch = 17, col = 'red', xlab = "day of year", ylab = "", yaxt = "n", main = user)
-  
-  # plot game play dates
-  points(tmp2$yearday, rep(1, nrow(tmp2)), pch = 16, col = 'blue')
-}
-
+#   plot(tmp$yearday, rep(1, nrow(tmp1)), pch = 17, col = 'red', xlim = c(2000,2204), xlab = "Day", ylab = "", ylim = c(0,1), yaxt = "n", main = user)
+#   
+#   # plot game play dates
+#   points(tmp2$yearday, rep(1, nrow(tmp2)), pch = 16, col = 'blue')
+ }
 
