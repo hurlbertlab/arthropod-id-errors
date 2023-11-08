@@ -1,13 +1,12 @@
 # Script for Identifying the types of errors made by citizen scientists in Caterpillars Count!
 
+# Add a new comment
+
 # Load libraries
 library(dplyr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
-library(forcats)
-library(popbio)
-library(ggpubr)
 library(lubridate) #built under R version 4.3.2
 
 # Read in raw data
@@ -543,13 +542,14 @@ mtext("ID Accuracy", 2, outer = TRUE, cex = 1.5, line = -0.5)
 ############################# TIMESTAMP ANALYSIS ###############################
 
 timestampdf = expert_ID %>%
-  left_join(surveys[, c("ID", "UserFKOfObserver", "LocalDate", "LocalTime")], c("ArthropodSightingFK" = "ID")) %>%
+  left_join(arthro_sight[, c("ID", "SurveyFK")], by = c("ArthropodSightingFK" = "ID")) %>%
+  left_join(surveys[, c("ID", "UserFKOfObserver", "LocalDate", "LocalTime")], c("SurveyFK" = "ID")) %>%
   select("OriginalGroup", "StandardGroup", "UserFKOfObserver", "LocalDate", "LocalTime") %>%
   group_by(UserFKOfObserver) %>%
   mutate(correct = OriginalGroup == StandardGroup,
          doy = yday(LocalDate), 
          Year = as.numeric(substr(LocalDate, 1, 4)),
-         yearday = Year + doy)
+         yearday = Year + doy/365)
 
 gamescoresdf = game %>%
   select("UserFK", "Score", "Timestamp") %>%
@@ -566,10 +566,10 @@ userCounts_filtered_surveys = surveys %>%
   count(UserFKOfObserver) %>%
   arrange(desc(n))
 
-game_and_survey = left_join(userCounts_filtered, userCounts_filtered_surveys, by = c("UserFK" = "UserFKOfObserver")) %>%
-  filter(n.x > 2, n.y > 2)
+game_and_survey = inner_join(userCounts_filtered, surveyusererrors, by = c("UserFK" = "UserFKOfObserver")) %>%
+  filter(n >= 2, UserObsNum >= 8, UserFK != 26)
   
-par(mfrow = c(3, 3), mar=c(2.5,3.5,1,1))
+par(mfrow = c(2, 3), mar=c(2.5,3.5,3,1))
 for (user in game_and_survey$UserFK) {
   
   df1 = timestampdf %>%
@@ -577,9 +577,11 @@ for (user in game_and_survey$UserFK) {
   df2 = gamescoresdf %>%
     filter(UserFK %in% user)
   
-  plot(df1$yearday, rep(1, nrow(df1)), pch = 17, col = 'red', xlab = 'Day', ylab = '', yaxt = 'n')
+  plot(df1$yearday, df1$correct, pch = 17, col = 'red', xlab = 'Day', ylab = '', 
+       yaxt = 'n', main = user, xlim = c(min(df1$yearday, df2$yearday), max(df1$yearday, df2$yearday)))
   
-  points(df2$yearday, rep(1, nrow(df2)), col = 'blue')
+  abline(v = df2$yearday, col = 'blue')
+#  points(df2$yearday, rep(1, nrow(df2)), pch = 16, cex = 2, col = 'blue')
   
   #tmp1 = filter(timestampdf, UserFKOfObserver %in% user)
   #tmp2 = filter(gamescoresdf, UserFK %in% user)
