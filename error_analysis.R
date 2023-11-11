@@ -385,10 +385,12 @@ abline(bestlength, col = 'green')
 
 
 ########## PLOT: does IDAccuracy predict Survey Error Rate? ##########
-  
-plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$UserErrorRate, xlab = "Best ID Accuracy", ylab = "Survey Error Rate (%)", main = "", cex = 2, ylim = c(0, 30))
 
-abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$best_ID_accuracy), col = 'green')
+par(mfrow = c(1,1))
+  
+plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$UserErrorRate, xlab = "Best ID Accuracy", ylab = "Survey Error Rate (%)", cex = 2, ylim = c(0, 30), main = "User's ID Game Score & Survey Error", pch = 16, col = 'salmon')
+
+abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$best_ID_accuracy), col = 'blue')
 
 
 #########PLOT: Does PercentFound predict Survey Error Rate? ##########
