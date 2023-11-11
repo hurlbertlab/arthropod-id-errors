@@ -241,7 +241,11 @@ correctness_plot = correctness_table %>%
   filter(correctness_table$OriginalGroup %in% 'ant') %>%
   logi.hist.plot(Length, agreement)
 
-############## Beat sheet / Visual Survey Accuracy Comparison #############
+######################################################################
+#
+#      Beat sheet / Visual Survey Accuracy Comparison 
+#
+#################################################################
 
 # 1
 # join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
@@ -263,7 +267,14 @@ text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"],
 
 abline(a=0, b = 1)
 
-#Game Data Analysis - how good are people at estimating length?
+
+#########################################################################
+#
+#       Game Data Analysis 
+#
+##########################################################################
+
+# 1) How good are people at estimating length?
 # filtered to difficult arth groups/out 'easy' groups rather than by individual, because error rate by individual might be skewed due to 'easy' arths
 
 # for each user, we want the 1st score, avg score, max/"best" score, for all 4 scores (lengths, percentfound, IDaccuracy)
@@ -308,11 +319,52 @@ gameplayandusererrors = gameplaydf %>%
   inner_join(surveyusererrors[, c("UserErrorRate", "UserFKOfObserver", "UserObsNum")], by = c("UserFK" = "UserFKOfObserver")) %>%
   arrange(desc(UserObsNum))
 
-######## Plot showing AVERAGE SCORE vs. SURVEY ERROR RATE#########
+######## Plots showing FIRST SUBSCORE vs SURVEY ERROR RATE ###########
+
+# filter down to just the game scores that include subscores for a person's first time playing the game
+# show 3 panels with frequency histograms of finding accuracy, id accuracy, and length accuracy
+# this lets us say which things people are better at on average and which tasks people have more problems with. 
 
 par(mfrow = c(2, 2), mar = c(4, 4, 1, 1))
 
-# Plot showing BEST SCORE vs. SURVEY ERROR RATE
+# PLOT: does the first Length Accuracy predict Survey Error Rate? 
+
+subscores_gameplaydf = gameplaydf %>%
+  select(UserFK, first_length_accuracy, first_ID_accuracy, first_pct_found) %>%
+  filter(first_length_accuracy >= 0, 
+         UserFK != 25,
+         UserFK != 26) %>%
+  mutate(n = row_number(UserFK)) %>%
+  arrange(n)
+  
+barplot(subscores_gameplaydf$first_length_accuracy, names.arg = subscores_gameplaydf$n, width = 0.2, xlab = "Users", ylab = "First Length Score", ylim = c(0,100), col = 'salmon', space = 0.2)
+
+lengthavgline = mean(subscores_gameplaydf$first_length_accuracy)
+ 
+abline(a = lengthavgline, b = 0, col = 'blue', )
+
+# PLOT: does the first IDAccuracy predict Survey Error Rate?
+
+barplot(subscores_gameplaydf$first_ID_accuracy, names.arg = subscores_gameplaydf$n, width = 0.2, xlab = "Users", ylab = "First ID Score", ylim = c(0,100), col = 'salmon', space = 0.2)
+
+IDavgline = mean(subscores_gameplaydf$first_ID_accuracy)
+
+abline(a = IDavgline, b = 0, col = 'blue', )
+
+
+# PLOT: Does First PercentFound predict Survey Error Rate? 
+
+barplot(subscores_gameplaydf$first_pct_found, names.arg = subscores_gameplaydf$n, width = 0.2, xlab = "Users", ylab = "First Percent Found Score", ylim = c(0,100), col = 'salmon', space = 0.2)
+
+percentavgline = mean(subscores_gameplaydf$first_pct_found)
+
+abline(a = percentavgline, b = 0, col = 'blue')
+
+text(paste(round(percentavgline), 2))
+
+############## Plot showing BEST SCORE vs. SURVEY ERROR RATE #############
+
+par(mfrow = c(2, 2), mar = c(4, 4, 1, 1))
 
 plot(gameplayandusererrors$maxscore, gameplayandusererrors$UserErrorRate, xlab = "Best Score", ylab = "Survey Error Rate (%)", main = "", cex = 2, col = 'dark green')
 
@@ -591,5 +643,6 @@ for (user in game_and_survey$UserFK) {
 #   
 #   # plot game play dates
 #   points(tmp2$yearday, rep(1, nrow(tmp2)), pch = 16, col = 'blue')
- }
+}
+
 
