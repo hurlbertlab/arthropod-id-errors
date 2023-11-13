@@ -110,12 +110,14 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup)) +
            stat = 'identity') + 
   labs(x = "Arthropod Species", 
        y = "Error Rate", 
-       title = "What Arthropods are Typically Suspected As", 
+       #title = "What Arthropods are Typically Suspected As", 
        fill = "Suspected As...") +
   theme(plot.title = element_text(hjust=0.5, size=10), 
-        legend.text = element_text(size = 5), 
+        legend.text = element_text(size = 9), 
         legend.key.size = unit(2, 'mm'), 
-        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0)) 
+        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
+
+print(rev_stacked)
 
 
 ###
