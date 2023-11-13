@@ -320,7 +320,8 @@ surveyusererrors = expert_ID %>%
 
 gameplayandusererrors = gameplaydf %>%
   inner_join(surveyusererrors[, c("UserErrorRate", "UserFKOfObserver", "UserObsNum")], by = c("UserFK" = "UserFKOfObserver")) %>%
-  arrange(desc(UserObsNum))
+  arrange(desc(UserObsNum)) %>%
+  mutate(correctrate = 100 - UserErrorRate)
 
 ######## Plots showing FIRST SUBSCORE vs SURVEY ERROR RATE ###########
 
@@ -401,9 +402,9 @@ abline(bestlength, col = 'green')
 
 par(mfrow = c(1,1))
   
-plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$UserErrorRate, xlab = "Best ID Accuracy", ylab = "Survey Error Rate (%)", cex = 2, ylim = c(0, 30), main = "", pch = 16, col = 'salmon')
+plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$correctrate, xlab = "Best ID Accuracy", ylab = "Survey Error Rate (%)", cex = 2, ylim = c(70, 100), main = "", pch = 16, col = 'salmon')
 
-abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$best_ID_accuracy), col = 'blue')
+abline(lm(gameplayandusererrors$correctrate~gameplayandusererrors$best_ID_accuracy), col = 'blue')
 
 
 #########PLOT: Does PercentFound predict Survey Error Rate? ##########
