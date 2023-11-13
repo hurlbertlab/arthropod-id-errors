@@ -97,7 +97,8 @@ stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
         legend.title = element_text("testing"), 
         axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
 
-# reverse denominator stacked bar graph: "what are certain arthropods typically suspected as?"
+######### Plot: reverse denominator stacked bar graph: "what are certain arthropods typically suspected as?" ############
+
 d2 = only_error_num
 d3 = aggregate(d2$rate, by=list(d2$StandardGroup), FUN = sum)
 d3 = d3[order(-d3$x),]
@@ -327,6 +328,8 @@ gameplayandusererrors = gameplaydf %>%
 
 par(mfrow = c(2, 2), mar = c(4, 4, 1, 1))
 
+# x axis is score, y-axis is count of how many users got that score
+
 # PLOT: does the first Length Accuracy predict Survey Error Rate? 
 
 subscores_gameplaydf = gameplaydf %>%
@@ -336,12 +339,20 @@ subscores_gameplaydf = gameplaydf %>%
          UserFK != 26) %>%
   mutate(n = row_number(UserFK)) %>%
   arrange(n)
-  
-barplot(subscores_gameplaydf$first_length_accuracy, names.arg = subscores_gameplaydf$n, width = 0.2, xlab = "Users", ylab = "First Length Score", ylim = c(0,100), col = 'salmon', space = 0.2)
 
-lengthavgline = mean(subscores_gameplaydf$first_length_accuracy)
- 
-abline(a = lengthavgline, b = 0, col = 'blue', )
+par(mfrow = c(2, 2), mar = c(4, 4, 1, 1)) 
+
+hist(subscores_gameplaydf$first_length_accuracy, xlab = "Length Score", ylab = "Score Frequency", las = 1, main = "", col = 'salmon') 
+
+hist(subscores_gameplaydf$first_ID_accuracy, xlab = "ID Score", ylab = "Score Frequency", las = 1, main = "", col = 'salmon') 
+
+hist(subscores_gameplaydf$first_pct_found, xlab = "Percent Found", ylab = "Score Frequency", las = 1, main = "", col = 'salmon') 
+  
+# barplot(subscores_gameplaydf$first_length_accuracy, names.arg = subscores_gameplaydf$n, width = 0.2, xlab = "Users", ylab = "First Length Score", ylim = c(0,100), col = 'salmon', space = 0.2)
+# 
+# lengthavgline = mean(subscores_gameplaydf$first_length_accuracy)
+#  
+# abline(a = lengthavgline, b = 0, col = 'blue', )
 
 # PLOT: does the first IDAccuracy predict Survey Error Rate?
 
