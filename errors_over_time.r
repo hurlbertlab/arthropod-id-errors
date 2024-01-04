@@ -85,19 +85,16 @@ par(mfrow = c(3, 4), mar = c(5, 3, 1, 1))
 # Loop over several different user IDs to create a plot for each one
 for (u in c(2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) { 
   
-  errorsOverTimePlot(u, dataframe = df, new = T, ylab = "Test")
+  errorsOverTimePlot(u, dataframe = df, new = T, main = paste("UserID", u))
   
 }
 
-# each plot in the multi-panel figure combined... (incomplete)
+# Each plot in the multi-panel figure combined... (incomplete)
 #par(mfrow = c(1, 1), mar = c(5, 3, 1, 1))
 
 # Loop over several different user IDs to create a plot for each one
-# for (u in c(2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) { 
+for (u in c(2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) 
 #   
-# errorsOverTimePlot(u, dataframe = df, new = T)}
-
-#for (u in UserFKOfObserver) { plot(1:3, df[df$UserFKOfObserver[])}
 
 # Figure out how to create a dataframe that just has the cumulative number of photos FOR THAT GROUP, and error rates specific to THAT GROUP.
 

@@ -44,11 +44,15 @@ error_num = true_counts %>%
   mutate(rate = round((number / total_ID) * 100, 1)) %>%
   arrange(OriginalGroup, desc(rate)) 
 
+###### do we need this pivot table?::
 
-# pivot table 
+################# Plot: Image Plot of Pivot Table ###########################
+
 pivoted = error_num %>%
   select(OriginalGroup, StandardGroup, rate) %>%
   pivot_wider(names_from = StandardGroup, values_from = rate)
+
+#List of arthropod groups in the Caterpillars Count! app; excludes species' latin names etc. 
 
 arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar", 
                      "daddylonglegs", "fly", "grasshopper", "leafhopper",
@@ -68,10 +72,13 @@ mtext(arthGroupsWeWant, 2, at = (1:12)/11, las = 1, line = 1, padj = 3)
 
 # can add numbers to middle cells?
 
-?seq
+#######################################################################
+#
+#    Arthropod Mis-identification Analysis: On-Site / Field Data
+#
+######################################################################
 
-
-# Stacked bar graph: "What Arthropods are Mistaken For"
+####### Plot: Stacked bar graph: "What Arthropods are Mistaken For" #######
 
 only_error_num = error_num %>%
   filter(OriginalGroup != StandardGroup,
@@ -97,7 +104,11 @@ stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
         legend.title = element_text("testing"), 
         axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
 
-######### Plot: reverse denominator stacked bar graph: "what are certain arthropods typically suspected as?" ############
+dev.off()
+
+print(stacked)
+
+######## Plot:"What are certain arthropods typically suspected as?" ##########
 
 d2 = only_error_num
 d3 = aggregate(d2$rate, by=list(d2$StandardGroup), FUN = sum)
@@ -119,21 +130,8 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup)) +
 
 print(rev_stacked)
 
-
-###
-rev_stacked = ggplot(only_error_num, aes(fill=OriginalGroup, y=rate, x=fct_infreq(StandardGroup))) +
-  geom_bar(position='stack', 
-           stat = 'identity') + 
-  labs(x = "Arthropod Species", 
-       y = "Error Rate", 
-       title = "What Arthropods are Typically Suspected As", 
-       fill = "Suspected As...") +
-  theme(plot.title = element_text(hjust=0.5, size=10), 
-        legend.text = element_text(size = 5), 
-        legend.key.size = unit(2, 'mm'), 
-        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0)) 
-
-# graph: commonness of arthropod (with photos vs without photos?) 'how often are certain species of arthropod spotted'
+###!!!!! UNFINISHED: order
+########## Plot: "How often are certain species of arthropods spotted? ##############
 
 standard_total_id = expert_ID %>%
   group_by(StandardGroup) %>%
@@ -144,24 +142,22 @@ commonness = ggplot(standard_total_id, aes(y=total_ID, x=StandardGroup)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
   labs(x = "Arthropod Group", 
-       y = "Amount of Observations", 
+       y = "Total Amount of Observations", 
        title = "How Often are Arthropods Spotted") +
   theme(axis.text.x = element_text(size = 6))
 
-# LENGTH ANALYSIS
+print(commonness)
 
-# lengthdf = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>%
-#   select(OriginalGroup, StandardGroup, Length) %>%
-#   filter(OriginalGroup %in% arthGroupsWeWant) %>%
-#   mutate(agreement = OriginalGroup == StandardGroup) %>%
-#   group_by(OriginalGroup) %>%
-#   summarize(n0.5 = sum(Length <= 5, na.rm = T),
-#             n5.15 = sum(Length > 5 & Length <= 15, na.rm = T),
-#             n15plus = sum(Length > 15, na.rm = T)), 
-#             error0.5 = sum(Length <= 5 & !agreement, na.rm = T), 
-#             error5.15 = sum(Length > 5 & Length <= 15 & !agreement, na.rm = T), 
-#             errorn15plus = sum(Length > 15 & !agreement, na.rm = T)
-#          
+#############################################################
+#
+#      LENGTH ANALYSIS
+#
+##############################################################
+
+################## Plot: Length vs % Error per arthropod #############
+
+# UNFINISHED: not a super useful plot. 
+# modify: make points increase or decrease to represent sample size
   
 lengthdf = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
   select(OriginalGroup, StandardGroup, Length) %>% 
@@ -176,15 +172,17 @@ lengthdf = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID
             error15plus = sum(Length > 15 & !agreement, na.rm = T),
             rate0.5 = 100*error0.5/n0.5,
             rate5.15 = 100*error5.15/n5.15,
-            rate15plus = 100*error15plus/n15plus) +
-  las = 1, ylim = c(0,  1.2*max(lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")])) 
+            rate15plus = 100*error15plus/n15plus)
+  
+#this was attached to the above code: idk what it was for - 
+#las = 1, ylim = c(0,  1.2*max(lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")])) 
 
 par(mfrow = c(4,3), mar=c(2.5,5,1,1))
 
 for (arth in lengthdf$OriginalGroup) { plot(1:3, lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")], type = 'b', main = arth, ylab = "% error", xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("2-5 mm", "5-15 mm", "15+ mm"), 1, at = 1:3, line = 0.3, cex = 0.45))}
 # fly disparity? truebugs? 
 
-# 12 panel figure of accuracy versus length  ------------------------
+############## Plot: Incorrect/Correct ID vs Length of Arthropod #############
 
 correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
   select(OriginalGroup, StandardGroup, Length) %>% 
@@ -234,15 +232,13 @@ for (arth in arthGroupsWeWant) {
 mtext("Length (mm)", 1, cex = 1.5, outer = TRUE, line = 1)
 
 
-  # Plot glm predicted response curve using example code here:
-  # https://www.geeksforgeeks.org/how-to-plot-a-logistic-regression-curve-in-r/
+## delete??? ->>
 
-
-#for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
-
-correctness_plot = correctness_table %>%
-  filter(correctness_table$OriginalGroup %in% 'ant') %>%
-  logi.hist.plot(Length, agreement)
+# for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
+# 
+# correctness_plot = correctness_table %>%
+#   filter(correctness_table$OriginalGroup %in% 'ant') %>%
+#   logi.hist.plot(Length, agreement)
 
 ######################################################################
 #
@@ -402,7 +398,7 @@ abline(bestlength, col = 'green')
 
 par(mfrow = c(1,1))
   
-plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$correctrate, xlab = "Best ID Accuracy", ylab = "Survey Error Rate (%)", cex = 2, ylim = c(70, 100), main = "", pch = 16, col = 'salmon')
+plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$correctrate, xlab = "Virtual Surveys", ylab = "On-Site Surveys", cex = 2, ylim = c(70, 100), main = "", pch = 16, col = 'salmon')
 
 abline(lm(gameplayandusererrors$correctrate~gameplayandusererrors$best_ID_accuracy), col = 'blue')
 
