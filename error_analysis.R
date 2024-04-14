@@ -27,9 +27,11 @@ arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") #%>%
 surveys = read.csv("2023-09-12_Survey.csv")
 game = read.csv("2023-09-26_VirtualSurveyScore.csv")
 
-# true_counts displays OriginalGroup:StandardGroup:number of ID's with that pair 
+# true_counts displays OriginalGroup:StandardGroup:SawflyUpdated:number of ID's with that pair 
+
 true_counts = expert_ID %>%
-   group_by(OriginalGroup, StandardGroup) %>%
+  select(OriginalGroup, StandardGroup, SawflyUpdated) %>%
+   group_by(OriginalGroup, StandardGroup, SawflyUpdated) %>%
    summarize(number = n())
 
 # total_counts shows total amount of OriginalGroup IDs 
@@ -39,7 +41,7 @@ total_counts = expert_ID %>%
   
 # use left_join() to compare total with proportion from true_counts
 error_num = true_counts %>%
-  group_by(OriginalGroup) %>% 
+  group_by(OriginalGroup, SawflyUpdated) %>% 
   left_join(total_counts, true_counts, by = c("OriginalGroup" = "OriginalGroup")) %>%
   mutate(rate = round((number / total_ID) * 100, 1)) %>%
   arrange(OriginalGroup, desc(rate)) 
@@ -56,7 +58,7 @@ pivoted = error_num %>%
 
 arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar", 
                      "daddylonglegs", "fly", "grasshopper", "leafhopper",
-                     "moths", "spider", "truebugs")
+                     "moths", "spider", "truebugs", "sawfly larvae")
 
 pivot2 = pivoted[pivoted$OriginalGroup %in% arthGroupsWeWant, 
                  arthGroupsWeWant] %>%
@@ -119,7 +121,7 @@ d2$StandardGroup = factor(d2$StandardGroup, levels=str)
 rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
-  labs(x = "Arthropod Species", 
+  labs(x = "Actual Arthropod Group", 
        y = "Error Rate", 
        #title = "What Arthropods are Typically Suspected As", 
        fill = "Suspected As...") +
@@ -345,7 +347,7 @@ hist(subscores_gameplaydf$first_length_accuracy, xlab = "Length Score", ylab = "
 
 hist(subscores_gameplaydf$first_ID_accuracy, xlab = "ID Score", ylab = "Score Frequency", las = 1, main = "", col = 'salmon') 
 
-hist(subscores_gameplaydf$first_pct_found, xlab = "Percent Found", ylab = "Score Frequency", las = 1, main = "", col = 'salmon') 
+hist(subscores_gameplaydf$first_pct_found, xlab = "Percent Found", ylab = "Score Frequency", las = 1, main = "", col = 'salmon')
   
 # barplot(subscores_gameplaydf$first_length_accuracy, names.arg = subscores_gameplaydf$n, width = 0.2, xlab = "Users", ylab = "First Length Score", ylim = c(0,100), col = 'salmon', space = 0.2)
 # 
@@ -394,11 +396,11 @@ lengthR2 = summary(bestlength)$r.squared
 abline(bestlength, col = 'green')
 
 
-########## PLOT: does IDAccuracy predict Survey Error Rate? ##########
+########## PLOT: does online IDAccuracy predict Survey Error Rate? ##########
 
 par(mfrow = c(1,1))
   
-plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$correctrate, xlab = "Virtual Surveys", ylab = "On-Site Surveys", cex = 2, ylim = c(70, 100), main = "", pch = 16, col = 'salmon')
+plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$correctrate, xlab = "Virtual Surveys ID Scores", ylab = "On-Site Surveys ID Accuracy", cex = 2, ylim = c(70, 100), main = "", pch = 16, col = 'salmon')
 
 abline(lm(gameplayandusererrors$correctrate~gameplayandusererrors$best_ID_accuracy), col = 'blue')
 
@@ -408,6 +410,19 @@ abline(lm(gameplayandusererrors$correctrate~gameplayandusererrors$best_ID_accura
 plot(gameplayandusererrors$best_pct_found, gameplayandusererrors$UserErrorRate, xlab = "Best Percent Found", ylab = "Survey Error Rate (%)", main = "", cex = 2, ylim = c(0, 30))
 
 abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$best_pct_found), col = 'green')
+
+########PLOT: Best ID Accuracy Scores for Hard-to-ID Arthros  #######
+## we are excluding caterpillars, ants, spiders...
+## we are including only leafhoppers, beetles, true bugs, grasshoppers, flies, bees, aphids
+
+plot(gameplayandusererrors$best_ID_accuracy, gameplayandusererrors$UserErrorRate, xlab = "Best ID Accuracy", 
+     ylab = "Survey Error Rate (%)", 
+     main = "", 
+     cex = 2, 
+     ylim = c(0, 30))
+
+abline(lm(gameplayandusererrors$UserErrorRate~gameplayandusererrors$best_ID_accuracy), col = 'green')
+
 
 
 
