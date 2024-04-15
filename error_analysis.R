@@ -87,19 +87,23 @@ only_error_num = error_num %>%
          StandardGroup %in% arthGroupsWeWant, 
          OriginalGroup %in% arthGroupsWeWant)
 
+only_error_num$StandardGroup[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
+
+#only_error_num$OriginalGroup[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
+
 d2 = only_error_num
 d3 = aggregate(d2$rate, by=list(d2$OriginalGroup), FUN = sum)
 d3 = d3[order(-d3$x),]
 str = d3$Group.1
-d2$StandardGroup = factor(d2$OriginalGroup, levels=str)
+d2$OriginalGroup = factor(d2$OriginalGroup, levels=str)
 
-stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
+stacked = ggplot(only_error_num, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
   labs(x = "Originally Submitted As...", 
        y = "Error Rate", 
        title = "What Arthropods are Mistaken For", 
-       fill = "Arthropod Group") +
+       fill = "Actual Arthropod Group") +
   theme(plot.title = element_text(hjust=0.5, size=10), 
         legend.text = element_text(size = 5), 
         legend.key.size = unit(2, 'mm'), 
@@ -118,7 +122,7 @@ d3 = d3[order(-d3$x),]
 str = d3$Group.1
 d2$StandardGroup = factor(d2$StandardGroup, levels=str)
 
-rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup)) +
+rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup, SawflyUpdated)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
   labs(x = "Actual Arthropod Group", 
@@ -131,6 +135,10 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup)) +
         axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
 
 print(rev_stacked)
+
+# where sawflyupdated = 1, make as x value
+# can replace the StandardGroup in line 31 to "sawflylarvae"...
+
 
 ###!!!!! UNFINISHED: order
 ########## Plot: "How often are certain species of arthropods spotted? ##############
@@ -193,7 +201,7 @@ correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSighting
   group_by(OriginalGroup, Length)
   
 
-par(mfrow = c(4,3), mar=c(2.5,5,2,1), oma = c(4, 1, 1, 1))
+par(mfrow = c(4,3), mar=c(2.5,4,0,1), oma = c(4, 1, 1, 2))
 
 for (arth in arthGroupsWeWant) { 
   
@@ -215,8 +223,10 @@ for (arth in arthGroupsWeWant) {
                      p < 0.05 & p > 0.01 ~ "*",
                      .default = "")
    
-   plot(jitter(arthSubset$Length, .6), arthSubset$binary,
-        main = arth, xlab = "", las = 1, yaxt = "n", ylab = "")
+   plot(jitter(arthSubset$Length, .6), jitter(arthSubset$binary, 0.02),
+        xlab = "", las = 1, yaxt = "n", ylab = "")
+   
+   title(arth, line = -2.5)
    
    mtext("Incorrect <------> Correct", 2, line = .5, cex = .5)
         
@@ -228,10 +238,17 @@ for (arth in arthGroupsWeWant) {
    
    abline(v = minLength.9, col = 'blue', lty = 'dotted')
 
-   text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0("slope = ", slope, pstar))
-
+   text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0("slope =", slope, pstar))
+  
 }
-mtext("Length (mm)", 1, cex = 1.5, outer = TRUE, line = 1)
+mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
+
+#add jitter to y-values 
+#plot(x, jitter(y, 0.02))
+
+#make plot a bit taller
+
+#switch out "slope = ..." for "p < 0.01", etc.
 
 
 ## delete??? ->>
