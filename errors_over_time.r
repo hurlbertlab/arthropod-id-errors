@@ -49,7 +49,7 @@ userTotals = df %>%
   arrange(desc(totalPhotos))
 
 dfSelect = df %>%
-  filter(UserFKOfObserver %in% c(2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661))
+  filter(UserFKOfObserver %in% c(2763, 3654, 2020, 2024, 2809, 3165, 3204, 3625, 3654, 3661))
 
 # Function for making an error over time (vs. number of surveys) plot
 errorsOverTimePlot = function(UserID, dataframe = df, new = TRUE, ...) {
@@ -68,7 +68,7 @@ errorsOverTimePlot = function(UserID, dataframe = df, new = TRUE, ...) {
 # Do plots for some example users, e.g. UserFKOfObserver 2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661
 
 dfSelect = df %>%
-  filter(UserFKOfObserver %in% c(3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661))
+  filter(UserFKOfObserver %in% c(3654, 2020, 2024, 2809, 3165, 3204, 3625, 3654, 3661))
 
 
 ## EXAMPLES:
@@ -83,13 +83,13 @@ errorsOverTimePlot(UserID = 2020, dataframe = df, col = 'dodgerblue', new = FALS
 par(mfrow = c(3, 4), mar = c(5, 3, 1, 1))
 
 # Loop over several different user IDs to create a plot for each one
-for (u in c(2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) { 
+for (u in c(2763, 3654, 2020, 2024, 2809, 3165, 3204, 3625, 3654, 3661)) { 
   
   errorsOverTimePlot(u, dataframe = df, new = T, main = paste("UserID", u))
   
 }
 
-# Each plot in the multi-panel figure combined... (incomplete)
+# (incomplete) Each plot in the multi-panel figure combined...
 #par(mfrow = c(1, 1), mar = c(5, 3, 1, 1))
 
 # Loop over several different user IDs to create a plot for each one

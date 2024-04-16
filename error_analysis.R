@@ -218,9 +218,10 @@ for (arth in arthGroupsWeWant) {
    slope = round(coef(arthGLM)[2], 3)
    p = summary(arthGLM)$coefficients[2, 4]
    
-   pstar = case_when(p < 0.001 ~ "***",
-                     p < 0.01 & p > 0.001 ~ "**",
-                     p < 0.05 & p > 0.01 ~ "*",
+   pstar = case_when(p < 0.001 ~ "p<0.001",
+                     p < 0.01 & p > 0.001 ~ "p < 0.01 & p > 0.001",
+                     p < 0.05 & p > 0.01 ~ "p < 0.05 & p > 0.01",
+                     p > 0.05 ~ "p>0.05",
                      .default = "")
    
    plot(jitter(arthSubset$Length, .6), jitter(arthSubset$binary, 0.02),
@@ -237,9 +238,11 @@ for (arth in arthGroupsWeWant) {
    minLength.9 = min(predicted_data$Length[predicted_data$binary >= 0.9])
    
    abline(v = minLength.9, col = 'blue', lty = 'dotted')
+   
+   #p_value = t.test(arthSubset$Length, arthSubset$binary)$p.value
 
-   text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0("slope =", slope, pstar))
-  
+  text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0(pstar), cex = 0.68)
+   
 }
 mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
 
@@ -250,14 +253,6 @@ mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
 
 #switch out "slope = ..." for "p < 0.01", etc.
 
-
-## delete??? ->>
-
-# for (arth in correctness_table$OriginalGroup) { glm(correctness_table$binary ~ correctness_table$Length)}
-# 
-# correctness_plot = correctness_table %>%
-#   filter(correctness_table$OriginalGroup %in% 'ant') %>%
-#   logi.hist.plot(Length, agreement)
 
 ######################################################################
 #
