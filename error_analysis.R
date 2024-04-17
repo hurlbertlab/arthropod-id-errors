@@ -11,19 +11,12 @@ library(lubridate) #built under R version 4.3.2
 
 # Read in raw data
 expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
-arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv") #%>%
-  # filter(OriginalGroup == "daddylonglegs" & Length <= 20 |
-  #          OriginalGroup == "fly" & Length <= 40 |
-  #          OriginalGroup == "ant" & Length <= 25|
-  #          OriginalGroup == "bee" & Length <= 35|
-  #          OriginalGroup =="grasshopper" & Length <= 40|
-  #          OriginalGroup == "caterpillar" & Length <= 80|
-  #          OriginalGroup == "spider" & Length <= 40|
-  #          OriginalGroup == "grasshopper" & Length <= 50 |
-  #          OriginalGroup == "moths" & Length <= 80|
-  #          OriginalGroup == "leafhopper" & Length <= 30|
-  #          OriginalGroup == "ant" & Length <= 25|
-  #          OriginalGroup == "truebugs" & Length <= 40)
+expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
+expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
+
+# Fix two records manually that the user assumed originally were sawfly larvae (but in one case forgot to check the box)
+expert_ID$OriginalGroup[expert_ID$ArthropodSightingFK %in% c(116543,129308)] = 'sawfly'
+
 surveys = read.csv("2023-09-12_Survey.csv")
 game = read.csv("2023-09-26_VirtualSurveyScore.csv")
 
@@ -46,39 +39,17 @@ error_num = true_counts %>%
   mutate(rate = round((number / total_ID) * 100, 1)) %>%
   arrange(OriginalGroup, desc(rate)) 
 
-###### do we need this pivot table?::
-
-################# Plot: Image Plot of Pivot Table ###########################
-
-pivoted = error_num %>%
-  select(OriginalGroup, StandardGroup, rate) %>%
-  pivot_wider(names_from = StandardGroup, values_from = rate)
-
-#List of arthropod groups in the Caterpillars Count! app; excludes species' latin names etc. 
-
-arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar", 
-                     "daddylonglegs", "fly", "grasshopper", "leafhopper",
-                     "moths", "spider", "truebugs", "sawfly larvae")
-
-pivot2 = pivoted[pivoted$OriginalGroup %in% arthGroupsWeWant, 
-                 arthGroupsWeWant] %>%
-  mutate(OriginalGroup = arthGroupsWeWant) %>%
-  select(OriginalGroup, ant:truebugs)
-
-# image() plotting
-par(mar = c(6, 6, 1, 1))
-image(as.matrix(pivot2[, 2:ncol(pivot2)]), xaxt="n", yaxt="n", col = hcl.colors(100, "viridis")) 
-
-mtext(arthGroupsWeWant, 1, at = (1:12)/11, las = 2, line = 0.5, padj = -2) +
-mtext(arthGroupsWeWant, 2, at = (1:12)/11, las = 1, line = 1, padj = 3) 
-
-# can add numbers to middle cells?
 
 #######################################################################
 #
 #    Arthropod Mis-identification Analysis: On-Site / Field Data
 #
 ######################################################################
+
+arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar", 
+                     "daddylonglegs", "fly", "grasshopper", "leafhopper",
+                     "moths", "spider", "truebugs", "sawfly larvae")
+
 
 ####### Plot: Stacked bar graph: "What Arthropods are Mistaken For" #######
 
@@ -97,7 +68,7 @@ d3 = d3[order(-d3$x),]
 str = d3$Group.1
 d2$OriginalGroup = factor(d2$OriginalGroup, levels=str)
 
-stacked = ggplot(only_error_num, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
+stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
   labs(x = "Originally Submitted As...", 
