@@ -10,6 +10,9 @@ library(ggplot2)
 library(lubridate) #built under R version 4.3.2
 
 # Read in raw data
+
+setwd("C:/Users/ellen27/Documents/")
+
 expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
@@ -19,6 +22,7 @@ expert_ID$OriginalGroup[expert_ID$ArthropodSightingFK %in% c(116543,129308)] = '
 
 surveys = read.csv("2023-09-12_Survey.csv")
 game = read.csv("2023-09-26_VirtualSurveyScore.csv")
+arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:SawflyUpdated:number of ID's with that pair 
 
@@ -51,6 +55,8 @@ arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar",
                      "moths", "spider", "truebugs", "sawfly larvae")
 
 
+
+par = (mfrow = c(1,2))
 ####### Plot: Stacked bar graph: "What Arthropods are Mistaken For" #######
 
 only_error_num = error_num %>%
@@ -109,6 +115,9 @@ print(rev_stacked)
 
 # where sawflyupdated = 1, make as x value
 # can replace the StandardGroup in line 31 to "sawflylarvae"...
+
+require(gridExtra)
+grid.arrange(stacked, rev_stacked, nrow=2)
 
 
 ###!!!!! UNFINISHED: order
@@ -195,7 +204,7 @@ for (arth in arthGroupsWeWant) {
                      p > 0.05 ~ "p>0.05",
                      .default = "")
    
-   plot(jitter(arthSubset$Length, .6), jitter(arthSubset$binary, 0.02),
+   plot(jitter(arthSubset$Length, .6), jitter(arthSubset$binary, 0.75),
         xlab = "", las = 1, yaxt = "n", ylab = "")
    
    title(arth, line = -2.5)
@@ -216,13 +225,6 @@ for (arth in arthGroupsWeWant) {
    
 }
 mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
-
-#add jitter to y-values 
-#plot(x, jitter(y, 0.02))
-
-#make plot a bit taller
-
-#switch out "slope = ..." for "p < 0.01", etc.
 
 
 ######################################################################
