@@ -54,6 +54,9 @@ arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar",
                      "daddylonglegs", "fly", "grasshopper", "leafhopper",
                      "moths", "spider", "truebugs", "sawfly larvae")
 
+arthGroupNames = data.frame(originalName = arthGroupsWeWant,
+                            revisedName = c("ants", "aphids", "bees, wasps", "beetles",
+                                            "caterpillars", "daddy longlegs"))
 
 
 par = (mfrow = c(1,2))
@@ -77,6 +80,7 @@ d2$OriginalGroup = factor(d2$OriginalGroup, levels=str)
 stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
+  scale_y_continuous(breaks = seq(0, 30, by = 5)) +
   labs(x = "Originally Submitted As...", 
        y = "Error Rate", 
        title = "What Arthropods are Mistaken For", 
@@ -89,10 +93,12 @@ stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
         axis.title = element_text(size = 16),
         axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
         axis.text.y = element_text(size = 14))
+  
 
-#dev.off()
-
+pdf('figures/misidentified1.pdf', height = 5, width = 7)
 print(stacked)
+dev.off()
+
 
 ######## Plot:"What are certain arthropods typically suspected as?" ##########
 
@@ -105,6 +111,7 @@ d2$StandardGroup = factor(d2$StandardGroup, levels=str)
 rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup, SawflyUpdated)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
+  scale_y_continuous(breaks = seq(0, 30, by = 5)) +
   labs(x = "Actual Arthropod Group", 
        y = "Error Rate", 
        title = "Most Common Misidentifications", 
@@ -118,7 +125,9 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup, Sawfly
         axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
         axis.text.y = element_text(size = 14))
 
+pdf('figures/misidentified2.pdf', height = 5, width = 7)
 print(rev_stacked)
+dev.off()
 
 # where sawflyupdated = 1, make as x value
 # can replace the StandardGroup in line 31 to "sawflylarvae"...
