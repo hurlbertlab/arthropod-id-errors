@@ -18,7 +18,7 @@ expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup =
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
 
 # Fix two records manually that the user assumed originally were sawfly larvae (but in one case forgot to check the box)
-expert_ID$OriginalGroup[expert_ID$ArthropodSightingFK %in% c(116543,129308)] = 'sawfly'
+expert_ID$OriginalGroup[expert_ID$ArthropodSightingFK %in% c(116543,129308)] = 'sawfly larvae'
 
 surveys = read.csv("2023-09-12_Survey.csv")
 game = read.csv("2023-09-26_VirtualSurveyScore.csv")
@@ -81,13 +81,16 @@ stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
        y = "Error Rate", 
        title = "What Arthropods are Mistaken For", 
        fill = "Actual Arthropod Group") +
-  theme(plot.title = element_text(hjust=0.5, size=10), 
-        legend.text = element_text(size = 5), 
-        legend.key.size = unit(2, 'mm'), 
-        legend.title = element_text("testing"), 
-        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
+  theme_bw() + 
+  theme(plot.title = element_text(hjust=0.5, size=18), 
+        legend.text = element_text(size = 12), 
+        legend.key.size = unit(6, 'mm'), 
+        legend.title = element_text(size = 14), 
+        axis.title = element_text(size = 16),
+        axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
+        axis.text.y = element_text(size = 14))
 
-dev.off()
+#dev.off()
 
 print(stacked)
 
@@ -104,12 +107,16 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup, Sawfly
            stat = 'identity') + 
   labs(x = "Actual Arthropod Group", 
        y = "Error Rate", 
-       #title = "What Arthropods are Typically Suspected As", 
+       title = "Most Common Misidentifications", 
        fill = "Suspected As...") +
-  theme(plot.title = element_text(hjust=0.5, size=10), 
-        legend.text = element_text(size = 9), 
-        legend.key.size = unit(2, 'mm'), 
-        axis.text.x = element_text(size = 8, angle = 270, hjust = 0, vjust = 0))
+  theme_bw() + 
+  theme(plot.title = element_text(hjust=0.5, size=18), 
+        legend.text = element_text(size = 12), 
+        legend.key.size = unit(6, 'mm'), 
+        legend.title = element_text(size = 14), 
+        axis.title = element_text(size = 16),
+        axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
+        axis.text.y = element_text(size = 14))
 
 print(rev_stacked)
 
