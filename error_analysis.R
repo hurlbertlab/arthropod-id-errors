@@ -56,7 +56,9 @@ arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar",
 
 arthGroupNames = data.frame(originalName = arthGroupsWeWant,
                             revisedName = c("ants", "aphids", "bees, wasps", "beetles",
-                                            "caterpillars", "daddy longlegs"))
+                                            "caterpillars", "daddy longlegs", "flies",
+                                            "grasshoppers", "leafhoppers", "moths",
+                                            "spiders", "true bugs", "sawfly larvae"))
 
 
 par = (mfrow = c(1,2))
@@ -65,19 +67,23 @@ par = (mfrow = c(1,2))
 only_error_num = error_num %>%
   filter(OriginalGroup != StandardGroup,
          StandardGroup %in% arthGroupsWeWant, 
-         OriginalGroup %in% arthGroupsWeWant)
+         OriginalGroup %in% arthGroupsWeWant) %>%
+  left_join(arthGroupNames, by = c('StandardGroup' = 'originalName')) %>%
+  rename(StandardGroupRevised = revisedName) %>%
+  left_join(arthGroupNames, by = c('OriginalGroup' = 'originalName')) %>%
+  rename(OriginalGroupRevised = revisedName)
 
-only_error_num$StandardGroup[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
+only_error_num$StandardGroupRevised[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
 
 #only_error_num$OriginalGroup[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
 
 d2 = only_error_num
-d3 = aggregate(d2$rate, by=list(d2$OriginalGroup), FUN = sum)
+d3 = aggregate(d2$rate, by=list(d2$OriginalGroupRevised), FUN = sum)
 d3 = d3[order(-d3$x),]
 str = d3$Group.1
-d2$OriginalGroup = factor(d2$OriginalGroup, levels=str)
+d2$OriginalGroupRevised = factor(d2$OriginalGroupRevised, levels=str)
 
-stacked = ggplot(d2, aes(fill=StandardGroup, y=rate, x=OriginalGroup)) +
+stacked = ggplot(d2, aes(fill=StandardGroupRevised, y=rate, x=OriginalGroupRevised)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
@@ -102,13 +108,12 @@ dev.off()
 
 ######## Plot:"What are certain arthropods typically suspected as?" ##########
 
-d2 = only_error_num
-d3 = aggregate(d2$rate, by=list(d2$StandardGroup), FUN = sum)
-d3 = d3[order(-d3$x),]
-str = d3$Group.1
-d2$StandardGroup = factor(d2$StandardGroup, levels=str)
+d4 = aggregate(d2$rate, by=list(d2$StandardGroupRevised), FUN = sum)
+d4 = d4[order(-d4$x),]
+str2 = d4$Group.1
+d2$StandardGroupRevised = factor(d2$StandardGroupRevised, levels=str2)
 
-rev_stacked = ggplot(d2, aes(fill=OriginalGroup, y=rate, x=StandardGroup, SawflyUpdated)) +
+rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupRevised)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
@@ -196,12 +201,51 @@ correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSighting
   mutate(agreement = OriginalGroup==StandardGroup, binary = as.integer(agreement)) %>% 
   group_by(OriginalGroup, Length)
   
+correct_by_length = correctness_table %>%
+  group_by(StandardGroup, Length) %>%
+  summarize(nObs = n(),
+            nWrong = sum(!agreement),
+            errorRate = 100*nWrong/nObs)
+
+# New version plotting %s
+par(mfrow = c(4,3), mar=c(2.5,4,0,1), oma = c(4, 1, 1, 2))
+
+for (arth in arthGroupsWeWant[arthGroupsWeWant != "sawfly larvae"]) { 
+  
+  arthSubset = filter(correct_by_length, StandardGroup == arth)
+  
+  plot(arthSubset$Length, arthSubset$errorRate, xlab = "", las = 1, 
+       yaxt = "n", ylab = "", cex = log10(arthSubset$nObs), pch = 16, col = 'gray40')
+  
+  title(arth, line = -2.5)
+  
+  #mtext("Incorrect <------> Correct", 2, line = .5, cex = .5)
+  
+  lines(binary ~ Length, predicted_data, lwd=2, col="green")
+  
+  abline(h = 0.9, col = 'red', lty = 'dotted')
+  
+  minLength.9 = min(predicted_data$Length[predicted_data$binary >= 0.9])
+  
+  abline(v = minLength.9, col = 'blue', lty = 'dotted')
+  
+  #p_value = t.test(arthSubset$Length, arthSubset$binary)$p.value
+  
+  text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0(pstar), cex = 0.68)
+  
+}
+mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
+
+
+
+
+#####################  
 
 par(mfrow = c(4,3), mar=c(2.5,4,0,1), oma = c(4, 1, 1, 2))
 
 for (arth in arthGroupsWeWant) { 
   
-  arthSubset = filter(correctness_table, OriginalGroup == arth)
+  arthSubset = filter(correctness_table, StandardGroup == arth)
   
   # Logistic regression curve:
   
@@ -220,12 +264,12 @@ for (arth in arthGroupsWeWant) {
                      p > 0.05 ~ "p>0.05",
                      .default = "")
    
-   plot(jitter(arthSubset$Length, .6), jitter(arthSubset$binary, 0.75),
+   plot(jitter(arthSubset$Length, .5), jitter(arthSubset$binary, 0.3),
         xlab = "", las = 1, yaxt = "n", ylab = "")
    
    title(arth, line = -2.5)
    
-   mtext("Incorrect <------> Correct", 2, line = .5, cex = .5)
+   #mtext("Incorrect <------> Correct", 2, line = .5, cex = .5)
         
    lines(binary ~ Length, predicted_data, lwd=2, col="green")
    
