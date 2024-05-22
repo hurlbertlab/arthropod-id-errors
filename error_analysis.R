@@ -7,6 +7,7 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
+library(gridExtra)
 library(lubridate) #built under R version 4.3.2
 
 # Read in raw data
@@ -58,10 +59,10 @@ arthGroupNames = data.frame(originalName = arthGroupsWeWant,
                             revisedName = c("ants", "aphids", "bees, wasps", "beetles",
                                             "caterpillars", "daddy longlegs", "flies",
                                             "grasshoppers", "leafhoppers", "moths",
-                                            "spiders", "true bugs", "sawfly larvae"))
+                                            "spiders", "true bugs", "sawfly larvae"),
+                            maxLength = c(15, 10, 22, 30, 60, 15, 25, 40, 25, 25, 22, 35, 50))
 
 
-par = (mfrow = c(1,2))
 ####### Plot: Stacked bar graph: "What Arthropods are Mistaken For" #######
 
 only_error_num = error_num %>%
@@ -120,7 +121,7 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupR
   labs(x = "Actual Arthropod Group", 
        y = "Error Rate", 
        title = "Most Common Misidentifications", 
-       fill = "Suspected As...") +
+       fill = "Suspected As...             ") +
   theme_bw() + 
   theme(plot.title = element_text(hjust=0.5, size=18), 
         legend.text = element_text(size = 12), 
@@ -134,14 +135,9 @@ pdf('figures/misidentified2.pdf', height = 5, width = 7)
 print(rev_stacked)
 dev.off()
 
-# where sawflyupdated = 1, make as x value
-# can replace the StandardGroup in line 31 to "sawflylarvae"...
-
-require(gridExtra)
 grid.arrange(stacked, rev_stacked, nrow=2)
 
 
-###!!!!! UNFINISHED: order
 ########## Plot: "How often are certain species of arthropods spotted? ##############
 
 standard_total_id = expert_ID %>%
@@ -167,34 +163,6 @@ print(commonness)
 
 ################## Plot: Length vs % Error per arthropod #############
 
-# UNFINISHED: not a super useful plot. 
-# modify: make points increase or decrease to represent sample size
-  
-lengthdf = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
-  select(OriginalGroup, StandardGroup, Length) %>% 
-  filter(OriginalGroup %in% arthGroupsWeWant) %>% 
-  mutate(agreement = OriginalGroup==StandardGroup) %>% 
-  group_by(OriginalGroup) %>% 
-  summarize(n0.5 = sum(Length <= 5, na.rm = T),
-            n5.15 = sum(Length > 5 & Length <= 15, na.rm = T),
-            n15plus = sum(Length > 15, na.rm = T),
-            error0.5 = sum(Length <= 5 & !agreement, na.rm = T),
-            error5.15 = sum(Length > 5 & Length <= 15 & !agreement, na.rm = T),
-            error15plus = sum(Length > 15 & !agreement, na.rm = T),
-            rate0.5 = 100*error0.5/n0.5,
-            rate5.15 = 100*error5.15/n5.15,
-            rate15plus = 100*error15plus/n15plus)
-  
-#this was attached to the above code: idk what it was for - 
-#las = 1, ylim = c(0,  1.2*max(lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")])) 
-
-par(mfrow = c(4,3), mar=c(2.5,5,1,1))
-
-for (arth in lengthdf$OriginalGroup) { plot(1:3, lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")], type = 'b', main = arth, ylab = "% error", xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("2-5 mm", "5-15 mm", "15+ mm"), 1, at = 1:3, line = 0.3, cex = 0.45))}
-# fly disparity? truebugs? 
-
-############## Plot: Incorrect/Correct ID vs Length of Arthropod #############
-
 correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
   select(OriginalGroup, StandardGroup, Length) %>% 
   filter(OriginalGroup %in% arthGroupsWeWant) %>% 
@@ -207,84 +175,32 @@ correct_by_length = correctness_table %>%
             nWrong = sum(!agreement),
             errorRate = 100*nWrong/nObs)
 
-# New version plotting %s
-par(mfrow = c(4,3), mar=c(2.5,4,0,1), oma = c(4, 1, 1, 2))
+# New version plotting error rates vs length instead of correct/incorrect
 
-for (arth in arthGroupsWeWant[arthGroupsWeWant != "sawfly larvae"]) { 
+pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
+    cex.axis = 1.5, cex.main = 1.8)
+
+# Panels in order of error trends:
+# --the first 6 panels have uniformly low error rates regardless of length
+# --the next 5 panels show reduced error rates for larger specimens
+# --aphids just have high error rates
+for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
+               "grasshopper", "bee", "daddylonglegs", "moths", "truebugs", "aphid")) { 
   
   arthSubset = filter(correct_by_length, StandardGroup == arth)
   
   plot(arthSubset$Length, arthSubset$errorRate, xlab = "", las = 1, 
-       yaxt = "n", ylab = "", cex = log10(arthSubset$nObs), pch = 16, col = 'gray40')
-  
-  title(arth, line = -2.5)
-  
-  #mtext("Incorrect <------> Correct", 2, line = .5, cex = .5)
-  
-  lines(binary ~ Length, predicted_data, lwd=2, col="green")
-  
-  abline(h = 0.9, col = 'red', lty = 'dotted')
-  
-  minLength.9 = min(predicted_data$Length[predicted_data$binary >= 0.9])
-  
-  abline(v = minLength.9, col = 'blue', lty = 'dotted')
-  
-  #p_value = t.test(arthSubset$Length, arthSubset$binary)$p.value
-  
-  text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0(pstar), cex = 0.68)
+       ylab = "", cex = log10(arthSubset$nObs)+.2, pch = 16, col = 'gray40',
+       xlim = c(0, arthGroupNames$maxLength[arthGroupNames$originalName == arth]), ylim = c(0, 80))
+  title(arthGroupNames$revisedName[arthGroupNames$originalName == arth], line = -1.5)
+  abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
   
 }
-mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
+mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 1)
+mtext("Error Rate (%)", 2, cex = 2, outer = TRUE, line = 1)
+dev.off()
 
-
-
-
-#####################  
-
-par(mfrow = c(4,3), mar=c(2.5,4,0,1), oma = c(4, 1, 1, 2))
-
-for (arth in arthGroupsWeWant) { 
-  
-  arthSubset = filter(correctness_table, StandardGroup == arth)
-  
-  # Logistic regression curve:
-  
-   arthGLM = glm(binary ~ Length, data = arthSubset, family = "binomial")
-
-   predicted_data = data.frame(Length = seq(min(arthSubset$Length, na.rm = TRUE), max(arthSubset$Length, na.rm=TRUE)))
-   
-   predicted_data$binary = predict(arthGLM, predicted_data, type="response")
-   
-   slope = round(coef(arthGLM)[2], 3)
-   p = summary(arthGLM)$coefficients[2, 4]
-   
-   pstar = case_when(p < 0.001 ~ "p<0.001",
-                     p < 0.01 & p > 0.001 ~ "p < 0.01 & p > 0.001",
-                     p < 0.05 & p > 0.01 ~ "p < 0.05 & p > 0.01",
-                     p > 0.05 ~ "p>0.05",
-                     .default = "")
-   
-   plot(jitter(arthSubset$Length, .5), jitter(arthSubset$binary, 0.3),
-        xlab = "", las = 1, yaxt = "n", ylab = "")
-   
-   title(arth, line = -2.5)
-   
-   #mtext("Incorrect <------> Correct", 2, line = .5, cex = .5)
-        
-   lines(binary ~ Length, predicted_data, lwd=2, col="green")
-   
-   abline(h = 0.9, col = 'red', lty = 'dotted')
-   
-   minLength.9 = min(predicted_data$Length[predicted_data$binary >= 0.9])
-   
-   abline(v = minLength.9, col = 'blue', lty = 'dotted')
-   
-   #p_value = t.test(arthSubset$Length, arthSubset$binary)$p.value
-
-  text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0(pstar), cex = 0.68)
-   
-}
-mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
 
 
 ######################################################################
@@ -716,5 +632,84 @@ for (user in game_and_survey$UserFK) {
 #   # plot game play dates
 #   points(tmp2$yearday, rep(1, nrow(tmp2)), pch = 16, col = 'blue')
 }
+
+
+#################################################################################
+############   OLD STUFF ########################################################
+
+# UNFINISHED: not a super useful plot. 
+# modify: make points increase or decrease to represent sample size
+
+lengthdf = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
+  select(OriginalGroup, StandardGroup, Length) %>% 
+  filter(OriginalGroup %in% arthGroupsWeWant) %>% 
+  mutate(agreement = OriginalGroup==StandardGroup) %>% 
+  group_by(OriginalGroup) %>% 
+  summarize(n0.5 = sum(Length <= 5, na.rm = T),
+            n5.15 = sum(Length > 5 & Length <= 15, na.rm = T),
+            n15plus = sum(Length > 15, na.rm = T),
+            error0.5 = sum(Length <= 5 & !agreement, na.rm = T),
+            error5.15 = sum(Length > 5 & Length <= 15 & !agreement, na.rm = T),
+            error15plus = sum(Length > 15 & !agreement, na.rm = T),
+            rate0.5 = 100*error0.5/n0.5,
+            rate5.15 = 100*error5.15/n5.15,
+            rate15plus = 100*error15plus/n15plus)
+
+#this was attached to the above code: idk what it was for - 
+#las = 1, ylim = c(0,  1.2*max(lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")])) 
+
+par(mfrow = c(4,3), mar=c(2.5,5,1,1))
+
+for (arth in lengthdf$OriginalGroup) { plot(1:3, lengthdf[lengthdf$OriginalGroup == arth, c("rate0.5", "rate5.15", "rate15plus")], type = 'b', main = arth, ylab = "% error", xaxt = "n", xlab = "", xlim = c(0.5, 3.5), mtext(c("2-5 mm", "5-15 mm", "15+ mm"), 1, at = 1:3, line = 0.3, cex = 0.45))}
+# fly disparity? truebugs? 
+
+############## Plot: Incorrect/Correct ID vs Length of Arthropod #############
+
+#####################  OLD ##################################
+
+par(mfrow = c(4,3), mar=c(2.5,4,0,1), oma = c(4, 1, 1, 2))
+
+for (arth in arthGroupsWeWant) { 
+  
+  arthSubset = filter(correctness_table, StandardGroup == arth)
+  
+  # Logistic regression curve:
+  
+  arthGLM = glm(binary ~ Length, data = arthSubset, family = "binomial")
+  
+  predicted_data = data.frame(Length = seq(min(arthSubset$Length, na.rm = TRUE), max(arthSubset$Length, na.rm=TRUE)))
+  
+  predicted_data$binary = predict(arthGLM, predicted_data, type="response")
+  
+  slope = round(coef(arthGLM)[2], 3)
+  p = summary(arthGLM)$coefficients[2, 4]
+  
+  pstar = case_when(p < 0.001 ~ "p<0.001",
+                    p < 0.01 & p > 0.001 ~ "p < 0.01 & p > 0.001",
+                    p < 0.05 & p > 0.01 ~ "p < 0.05 & p > 0.01",
+                    p > 0.05 ~ "p>0.05",
+                    .default = "")
+  
+  plot(jitter(arthSubset$Length, .5), jitter(arthSubset$binary, 0.3),
+       xlab = "", las = 1, yaxt = "n", ylab = "")
+  
+  title(arth, line = -2.5)
+  
+  #mtext("Incorrect <------> Correct", 2, line = .5, cex = .5)
+  
+  lines(binary ~ Length, predicted_data, lwd=2, col="green")
+  
+  abline(h = 0.9, col = 'red', lty = 'dotted')
+  
+  minLength.9 = min(predicted_data$Length[predicted_data$binary >= 0.9])
+  
+  abline(v = minLength.9, col = 'blue', lty = 'dotted')
+  
+  #p_value = t.test(arthSubset$Length, arthSubset$binary)$p.value
+  
+  text(x = .8*max(arthSubset$Length, na.rm = T), y = .2, labels = paste0(pstar), cex = 0.68)
+  
+}
+mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
 
 
