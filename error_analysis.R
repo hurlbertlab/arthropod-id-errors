@@ -8,7 +8,8 @@ library(tidyr)
 library(stringr)
 library(ggplot2)
 library(gridExtra)
-library(lubridate) #built under R version 4.3.2
+library(lubridate)
+library(vioplot)
 
 # Read in raw data
 
@@ -255,11 +256,26 @@ gameplaydf =  game %>%
             best_pct_found = max(PercentFound[PercentFound != -1], na.rm = TRUE),
             first_length_accuracy = LengthAccuracy[LengthAccuracy != -1][1],
             first_ID_accuracy = IdentificationAccuracy[IdentificationAccuracy != -1][1],
-            first_pct_found = PercentFound[PercentFound != -1][1])
+            first_pct_found = PercentFound[PercentFound != -1][1]) %>%
+  filter(!UserFK %in% c(25, 26)) #remove records from Allen and Aaron
 
 # Change -Inf values to NA
 gameplaydf[gameplaydf == -Inf | gameplaydf == Inf] = NA
 
+#################################################
+# Figure of distribution of 3 sub game scores 
+
+pdf('figures/game_scores.pdf', height = 5, width = 7)
+par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
+vioplot(gameplaydf[, c('first_pct_found', 'best_pct_found', 
+                       'first_ID_accuracy', 'best_ID_accuracy', 
+                       'first_length_accuracy', 'best_length_accuracy')],
+        col = c('goldenrod', 'goldenrod4', 'firebrick1', 'firebrick', 'turquoise', 'turquoise4'), 
+        xaxt = 'n', las = 1, ylab = "Accuracy", cex.axis = 1.2, at = c(1:2, 4:5, 7:8))
+axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
+mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
+mtext(c("% Found", "Identification", "Length\nestimation"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
+dev.off()
 
 # Calculating survey identification error rates based on the non-easy (caterpillar, ant, spider) bugs
 #  (also excluding other and unidentified)
