@@ -23,7 +23,7 @@ expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
 expert_ID$OriginalGroup[expert_ID$ArthropodSightingFK %in% c(116543,129308)] = 'sawfly larvae'
 
 surveys = read.csv("2025-04-14_Survey.csv")
-game = read.csv("2023-09-26_VirtualSurveyScore.csv")
+game = read.csv("2025-04-14_VirtualSurveyScore.csv")
 arthro_sight = read.csv("2025-04-14_ArthropodSighting.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:SawflyUpdated:number of ID's with that pair 
