@@ -15,16 +15,16 @@ library(vioplot)
 
 setwd("C:/Users/ellen27/Documents/")
 
-expert_ID = read.csv("2023-09-12_ExpertIdentification.csv")
+expert_ID = read.csv("2025-04-14_ExpertIdentification.csv")
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
 
 # Fix two records manually that the user assumed originally were sawfly larvae (but in one case forgot to check the box)
 expert_ID$OriginalGroup[expert_ID$ArthropodSightingFK %in% c(116543,129308)] = 'sawfly larvae'
 
-surveys = read.csv("2023-09-12_Survey.csv")
+surveys = read.csv("2025-04-14_Survey.csv")
 game = read.csv("2023-09-26_VirtualSurveyScore.csv")
-arthro_sight = read.csv("2023-09-12_ArthropodSighting.csv")
+arthro_sight = read.csv("2025-04-14_ArthropodSighting.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:SawflyUpdated:number of ID's with that pair 
 
