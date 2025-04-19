@@ -36,13 +36,13 @@ true_counts = expert_ID %>%
 # total_counts shows total amount of OriginalGroup IDs 
 total_counts = expert_ID %>%
    group_by(OriginalGroup) %>%
-   summarize(total_ID = n())
+   summarize(total_OGID = n())
   
 # use left_join() to compare total with proportion from true_counts
 error_num = true_counts %>%
   group_by(OriginalGroup, SawflyUpdated) %>% 
   left_join(total_counts, true_counts, by = c("OriginalGroup" = "OriginalGroup")) %>%
-  mutate(rate = round((number / total_ID) * 100, 1)) %>%
+  mutate(rate = round((number / total_OGID) * 100, 1)) %>%
   arrange(OriginalGroup, desc(rate)) 
 
 
@@ -73,7 +73,9 @@ only_error_num = error_num %>%
   left_join(arthGroupNames, by = c('StandardGroup' = 'originalName')) %>%
   rename(StandardGroupRevised = revisedName) %>%
   left_join(arthGroupNames, by = c('OriginalGroup' = 'originalName')) %>%
-  rename(OriginalGroupRevised = revisedName)
+  rename(OriginalGroupRevised = revisedName) 
+
+#where are the length values coming from?
 
 only_error_num$StandardGroupRevised[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
 
@@ -137,6 +139,20 @@ print(rev_stacked)
 dev.off()
 
 grid.arrange(stacked, rev_stacked, nrow=2)
+
+
+########## TWO PANEL PLOT: "Field Identification Accuracy" ##################
+
+
+
+#only_error_num = error_num %>%
+#filter(OriginalGroup != StandardGroup,
+       #StandardGroup %in% arthGroupsWeWant, 
+       #OriginalGroup %in% arthGroupsWeWant) %>%
+  #left_join(arthGroupNames, by = c('StandardGroup' = 'originalName')) %>%
+  #rename(StandardGroupRevised = revisedName) %>%
+  #left_join(arthGroupNames, by = c('OriginalGroup' = 'originalName')) %>%
+  #rename(OriginalGroupRevised = revisedName)
 
 
 ########## Plot: "How often are certain species of arthropods spotted? ##############
