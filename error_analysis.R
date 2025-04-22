@@ -232,17 +232,22 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
   abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
 }
 
-# ggplot2 length analysis with r^2 / p-value / regression lines
+####### ggplot2 length analysis with r^2 / p-value / regression lines
 
-# Merge group names
+pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
+    cex.axis = 1.5, cex.main = 1.8)
+
+# Merge group names and cleaning data (deleting NA values)
 correct_plot_data <- correct_by_length %>%
-  left_join(arthGroupNames, by = c("StandardGroup" = "originalName"))
+  left_join(arthGroupNames, by = c("StandardGroup" = "originalName")) %>%
+  filter(!is.na(Length), !is.na(errorRate), !is.na(nObs), nObs > 0)
 
 # Plot with regression and correlation stats
 ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
   geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
   geom_smooth(method = "lm", se = FALSE, color = "blue", linetype = "solid", linewidth = 0.8) +
-  stat_cor(method = "pearson", aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+  stat_cor(aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
            label.x.npc = "left", label.y.npc = "top", size = 3.5) +
   geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
   facet_wrap(~ revisedName, scales = "free_x") +
@@ -251,6 +256,38 @@ ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
   theme(strip.text = element_text(size = 10),
         axis.text = element_text(size = 8),
         legend.position = "none")
+################
+
+# Ensure folder exists
+if (!dir.exists("figures")) dir.create("figures")
+
+pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+
+# Merge group names and clean data
+correct_plot_data <- correct_by_length %>%
+  left_join(arthGroupNames, by = c("StandardGroup" = "originalName")) %>%
+  filter(!is.na(Length), !is.na(errorRate), !is.na(nObs), nObs > 0)
+
+# Create the plot object
+p <- ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
+  geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue", linewidth = 0.8) +
+  stat_cor(method = "pearson",
+           aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
+           label.x.npc = "left", label.y.npc = "top", size = 3.5) +
+  geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
+  facet_wrap(~ revisedName, scales = "free_x") +
+  labs(x = "Length", y = "Error Rate") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 10),
+        axis.text = element_text(size = 8),
+        legend.position = "none")
+
+# Print it to the PDF device
+print(p)
+
+# Close the device
+dev.off()
 
 
 
