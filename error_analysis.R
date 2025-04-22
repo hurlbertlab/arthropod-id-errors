@@ -10,6 +10,7 @@ library(ggplot2)
 library(gridExtra)
 library(lubridate)
 library(vioplot)
+library(ggpubr)
 
 # Read in raw data
 
@@ -202,6 +203,7 @@ par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2
 # --the first 6 panels have uniformly low error rates regardless of length
 # --the next 5 panels show reduced error rates for larger specimens
 # --aphids just have high error rates
+
 for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
                "grasshopper", "bee", "daddylonglegs", "moths", "truebugs", "aphid")) { 
   
@@ -214,9 +216,41 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
   abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
   
 }
-mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 1)
-mtext("Error Rate (%)", 2, cex = 2, outer = TRUE, line = 1)
-dev.off()
+
+#Tile plots:
+par(mfrow = c(3, 4))  # 3 rows, 4 columns — adjust as needed
+
+for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
+               "grasshopper", "bee", "daddylonglegs", "moths", "truebugs", "aphid")) { 
+  
+  arthSubset = filter(correct_by_length, StandardGroup == arth)
+  
+  plot(arthSubset$Length, arthSubset$errorRate, xlab = "", las = 1, 
+       ylab = "", cex = log10(arthSubset$nObs)+.2, pch = 16, col = 'gray40',
+       xlim = c(0, arthGroupNames$maxLength[arthGroupNames$originalName == arth]), ylim = c(0, 80))
+  title(arthGroupNames$revisedName[arthGroupNames$originalName == arth], line = -1.5)
+  abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
+}
+
+# ggplot2 length analysis with r^2 / p-value / regression lines
+
+# Merge group names
+correct_plot_data <- correct_by_length %>%
+  left_join(arthGroupNames, by = c("StandardGroup" = "originalName"))
+
+# Plot with regression and correlation stats
+ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
+  geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue", linetype = "solid", linewidth = 0.8) +
+  stat_cor(method = "pearson", aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")),
+           label.x.npc = "left", label.y.npc = "top", size = 3.5) +
+  geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
+  facet_wrap(~ revisedName, scales = "free_x") +
+  labs(x = "Length", y = "Error Rate") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 10),
+        axis.text = element_text(size = 8),
+        legend.position = "none")
 
 
 
