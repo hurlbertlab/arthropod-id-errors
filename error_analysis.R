@@ -553,7 +553,7 @@ for (user in userList_score) {
 
 scoretest = cor.test(scores_overtime$playnumber, scores_overtime$Score, method = "spearman", exact = FALSE)
 
-text(14, 1550, paste("r =", round(scoretest$estimate,2)))
+text(30, 1200, paste("r =", round(scoretest$estimate,2)))
 
 #PercentFound plot
 plot(subscores_overtime$playnumber, subscores_overtime$PercentFound, pch = 16, type = 'n', las = 1, ylab ="Percent Found", xlab = "")
