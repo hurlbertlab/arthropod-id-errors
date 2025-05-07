@@ -92,18 +92,19 @@ stacked = ggplot(d2, aes(fill=StandardGroupRevised, y=rate, x=OriginalGroupRevis
   geom_bar(position='stack', 
            stat = 'identity') + 
   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
-  labs(x = "Originally Submitted As...", 
+  labs(x = "Originally Reported As...", 
        y = "Error Rate", 
-       title = "What Arthropods are Mistaken For", 
-       fill = "Actual Arthropod Group") +
+       #title = "What Arthropods are Mistaken For", 
+       fill = "Actual Group") +
   theme_bw() + 
-  theme(plot.title = element_text(hjust=0.5, size=18), 
-        legend.text = element_text(size = 12), 
-        legend.key.size = unit(6, 'mm'), 
+  theme(#plot.title = element_text(hjust=0.5, size=18), 
+        legend.text = element_text(size = 11), 
+        #legend.key.size = unit(6, 'mm'), 
         legend.title = element_text(size = 14), 
         axis.title = element_text(size = 16),
         axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
-        axis.text.y = element_text(size = 14))
+        axis.text.y = element_text(size = 14)) +
+  theme(plot.margin = unit(c(1, .5, .2, .5), "cm"))
   
 
 pdf('figures/misidentified1.pdf', height = 5, width = 7)
@@ -122,24 +123,28 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupR
   geom_bar(position='stack', 
            stat = 'identity') + 
   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
-  labs(x = "Actual Arthropod Group", 
+  labs(x = "Actual Group", 
        y = "Error Rate", 
-       title = "Most Common Misidentifications", 
-       fill = "Suspected As...             ") +
+       #title = "Most Common Misidentifications", 
+       fill = "Reported As") +
   theme_bw() + 
-  theme(plot.title = element_text(hjust=0.5, size=18), 
-        legend.text = element_text(size = 12), 
-        legend.key.size = unit(6, 'mm'), 
+  theme(#plot.title = element_text(hjust=0.5, size=18), 
+        legend.text = element_text(size = 11), 
+        #legend.key.size = unit(6, 'mm'), 
         legend.title = element_text(size = 14), 
         axis.title = element_text(size = 16),
         axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
-        axis.text.y = element_text(size = 14))
+        axis.text.y = element_text(size = 14)) +
+  theme(plot.margin = unit(c(1,.5,.2,.5), "cm"))
 
 pdf('figures/misidentified2.pdf', height = 5, width = 7)
 print(rev_stacked)
 dev.off()
 
+pdf('figures/2-panel_misidentifications.pdf', height = 11, width = 7)
 grid.arrange(stacked, rev_stacked, nrow=2)
+dev.off()
+
 
 
 ########## TWO PANEL PLOT: "Field Identification Accuracy" ##################
@@ -256,6 +261,15 @@ ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
   theme(strip.text = element_text(size = 10),
         axis.text = element_text(size = 8),
         legend.position = "none")
+
+
+# Calculate p-values based on generalized linear models (glms) that don't assume a linear relationship
+bug.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'truebugs'], family = 'binomial')
+summary(bug.glm)
+
+dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'daddy longlegs' & correctness_table$Length < 20], family = 'binomial')
+summary(dad.glm)
+
 ################
 
 # Ensure folder exists
@@ -352,9 +366,14 @@ gameplaydf[gameplaydf == -Inf | gameplaydf == Inf] = NA
 #################################################
 # Figure of distribution of 3 sub game scores 
 
+# Compare first vs best for each subscore category
+wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy) # p = 9.8e-6
+wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy) # p = 1.7e-5
+wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found)     # p = 8.8e=6
+
 pdf('figures/game_scores.pdf', height = 5, width = 7)
 par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
-vioplot(gameplaydf[, c('first_pct_found', 'best_pct_found', 
+vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_found', 
                        'first_ID_accuracy', 'best_ID_accuracy', 
                        'first_length_accuracy', 'best_length_accuracy')],
         col = c('goldenrod', 'goldenrod4', 'firebrick1', 'firebrick', 'turquoise', 'turquoise4'), 
