@@ -187,7 +187,7 @@ correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSighting
   mutate(agreement = OriginalGroup==StandardGroup, binary = as.integer(agreement)) %>% 
   group_by(OriginalGroup, Length)
   
-correct_by_length = correctness_table %>%
+correct_by_length = correctness_table %>%  #counts # of incorrect length observations
   group_by(StandardGroup, Length) %>%
   summarize(nObs = n(),
             nWrong = sum(!agreement),
@@ -196,6 +196,7 @@ correct_by_length = correctness_table %>%
 # New version plotting error rates vs length instead of correct/incorrect
 
 pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+
 par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
 
@@ -214,6 +215,10 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
        xlim = c(0, arthGroupNames$maxLength[arthGroupNames$originalName == arth]), ylim = c(0, 80))
   title(arthGroupNames$revisedName[arthGroupNames$originalName == arth], line = -1.5)
   abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
+  
+  text(15, 40, paste("r =",round(scoretest$estimate,2)))
+  
+  #!!! sometimes this plot shows up, sometimes it doesn't
   
 }
 
@@ -572,7 +577,7 @@ for (user in userList[c(1:5, 7:8)]) { #one user is weird (2803)
 }
 
 scoretest = cor.test(subscores_overtime$playnumber, subscores_overtime$PercentFound, method = "spearman", exact = FALSE)
-text(8, 50, paste("r =",round(scoretest$estimate,2)))
+text(20, 50, paste("r =",round(scoretest$estimate,2)))
 
 #LengthAccuracy plot
 plot(subscores_overtime$playnumber, subscores_overtime$LengthAccuracy, pch = 16, type = 'n', las = 1, ylab ="Length Accuracy", xlab = "")
@@ -591,7 +596,7 @@ for (user in userList) {
 }
 
 scoretest = cor.test(subscores_overtime$playnumber, subscores_overtime$LengthAccuracy, method = "spearman", exact = FALSE)
-text(8, 50, paste("r =",round(scoretest$estimate,2)))
+text(20, 50, paste("r =",round(scoretest$estimate,2)))
 
 #ID Accuracy Plot
 plot(subscores_overtime$playnumber, subscores_overtime$IdentificationAccuracy, pch = 16, type = 'n', las = 1, ylab ="ID Accuracy", xlab = "")
@@ -609,7 +614,7 @@ for (user in userList) {
 }
 
 scoretest = cor.test(subscores_overtime$playnumber, subscores_overtime$IdentificationAccuracy, method = "spearman", exact = FALSE)
-text(8, 50, paste("r =",round(scoretest$estimate,2)))
+text(20, 50, paste("r =",round(scoretest$estimate,2)))
 
 mtext("Number of Game Plays", 1, outer = TRUE, cex = 1.5, line = 1.5)
 
