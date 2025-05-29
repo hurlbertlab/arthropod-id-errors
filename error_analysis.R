@@ -76,11 +76,7 @@ only_error_num = error_num %>%
   left_join(arthGroupNames, by = c('OriginalGroup' = 'originalName')) %>%
   rename(OriginalGroupRevised = revisedName) 
 
-#where are the length values coming from?
-
 only_error_num$StandardGroupRevised[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
-
-#only_error_num$OriginalGroup[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
 
 d2 = only_error_num
 d3 = aggregate(d2$rate, by=list(d2$OriginalGroupRevised), FUN = sum)
@@ -88,28 +84,46 @@ d3 = d3[order(-d3$x),]
 str = d3$Group.1
 d2$OriginalGroupRevised = factor(d2$OriginalGroupRevised, levels=str)
 
-stacked = ggplot(d2, aes(fill=StandardGroupRevised, y=rate, x=OriginalGroupRevised)) +
-  geom_bar(position='stack', 
-           stat = 'identity') + 
-  scale_y_continuous(breaks = seq(0, 30, by = 5)) +
-  labs(x = "Originally Reported As...", 
-       y = "Error Rate", 
-       #title = "What Arthropods are Mistaken For", 
-       fill = "Actual Group") +
-  theme_bw() + 
-  theme(#plot.title = element_text(hjust=0.5, size=18), 
-        legend.text = element_text(size = 11), 
-        #legend.key.size = unit(6, 'mm'), 
-        legend.title = element_text(size = 14), 
-        axis.title = element_text(size = 16),
-        axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
-        axis.text.y = element_text(size = 14)) +
-  theme(plot.margin = unit(c(1, .5, .2, .5), "cm"))
-  
+color_values = c(
+  "ants" = "#8da0cb",
+  "aphids" = "#1b9e77",
+  "bees, wasps" = "#d95f02",
+  "beetles" = "#a6761d",
+  "caterpillars" = "#666666",
+  "daddy longlegs" = "#66c2a5",
+  "flies" = "#e7298a",
+  "grasshoppers" = "#66a61e",
+  "leafhoppers" = "#fc8d62",
+  "moths" = "#e6ab02",
+  "sawfly larvae" = "#e78ac3",
+  "spiders" = "#a6d854",
+  "true bugs" = "#7570b3")
 
-pdf('figures/misidentified1.pdf', height = 5, width = 7)
+stacked = ggplot(d2, aes(fill = StandardGroupRevised, y = rate, 
+  x = OriginalGroupRevised)) +   geom_bar(position = 'stack', stat = 'identity') +
+  scale_fill_manual(
+    values = color_values,
+    breaks = sort(names(color_values)),  
+    name = "Actual Group") +
+   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
+   labs(
+     x = "Originally Reported As...",
+     y = "Error Rate",
+     fill = "Actual Group"
+   ) +
+   theme_bw() +
+   theme(
+     legend.text = element_text(size = 11),
+     legend.title = element_text(size = 14),
+     axis.title = element_text(size = 16),
+     axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
+     axis.text.y = element_text(size = 14),
+     plot.margin = unit(c(1, .5, .2, .5), "cm")
+   )
+
+#pdf('figures/misidentified1.pdf', height = 5, width = 7)
 print(stacked)
-dev.off()
+#dev.off()
 
 
 ######## Plot:"What are certain arthropods typically suspected as?" ##########
@@ -122,6 +136,10 @@ d2$StandardGroupRevised = factor(d2$StandardGroupRevised, levels=str2)
 rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupRevised)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
+  scale_fill_manual(
+    values = color_values,
+    breaks = sort(names(color_values)),  
+    name = "Actual Group") +
   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
   labs(x = "Actual Group", 
        y = "Error Rate", 
@@ -130,20 +148,20 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupR
   theme_bw() + 
   theme(#plot.title = element_text(hjust=0.5, size=18), 
         legend.text = element_text(size = 11), 
-        #legend.key.size = unit(6, 'mm'), 
+        legend.key.size = unit(6, 'mm'), 
         legend.title = element_text(size = 14), 
         axis.title = element_text(size = 16),
         axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
         axis.text.y = element_text(size = 14)) +
   theme(plot.margin = unit(c(1,.5,.2,.5), "cm"))
 
-pdf('figures/misidentified2.pdf', height = 5, width = 7)
+#pdf('figures/misidentified2.pdf', height = 5, width = 7)
 print(rev_stacked)
-dev.off()
+#dev.off()
 
-pdf('figures/2-panel_misidentifications.pdf', height = 11, width = 7)
+#pdf('figures/2-panel_misidentifications.pdf', height = 11, width = 7)
 grid.arrange(stacked, rev_stacked, nrow=2)
-dev.off()
+#dev.off()
 
 
 
@@ -370,13 +388,14 @@ gameplaydf[gameplaydf == -Inf | gameplaydf == Inf] = NA
 
 #################################################
 # Figure of distribution of 3 sub game scores 
+#################################################
 
 # Compare first vs best for each subscore category
 wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy) # p = 9.8e-6
 wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy) # p = 1.7e-5
 wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found)     # p = 8.8e=6
 
-pdf('figures/game_scores.pdf', height = 5, width = 7)
+#pdf('figures/game_scores.pdf', height = 5, width = 7)
 par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
 vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_found', 
                        'first_ID_accuracy', 'best_ID_accuracy', 
@@ -386,7 +405,9 @@ vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_fou
 axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
 mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
 mtext(c("% Found", "Identification", "Length\nestimation"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
-dev.off()
+#print(game_scores)
+
+#dev.off()
 
 # Calculating survey identification error rates based on the non-easy (caterpillar, ant, spider) bugs
 #  (also excluding other and unidentified)
