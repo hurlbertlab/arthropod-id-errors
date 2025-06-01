@@ -400,11 +400,17 @@ par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
 vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_found', 
                        'first_ID_accuracy', 'best_ID_accuracy', 
                        'first_length_accuracy', 'best_length_accuracy')],
-        col = c('goldenrod', 'goldenrod4', 'firebrick1', 'firebrick', 'turquoise', 'turquoise4'), 
-        xaxt = 'n', las = 1, ylab = "Accuracy", cex.axis = 1.2, at = c(1:2, 4:5, 7:8))
+        col = c('goldenrod', 'goldenrod4', 'firebrick1', 'firebrick', 'turquoise', 'turquoise4'),
+        xaxt = 'n', las = 1, cex.axis = 1.2, at = c(1:2, 4:5, 7:8))
 axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
+mtext("Accuracy", side = 2, line = 3, cex = 2)
 mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
 mtext(c("% Found", "Identification", "Length\nestimation"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
+text(2.3, 25, labels = "wilcoxon = 9.8e-6")
+text(4.5, 35, labels = "wilcoxon = 1.7e-5")
+text(7, 20, labels = "wilcoxon = 8.8e-6")
+
+
 #print(game_scores)
 
 #dev.off()
