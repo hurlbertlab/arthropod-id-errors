@@ -218,7 +218,7 @@ correct_by_length = correctness_table %>%  #counts # of incorrect length observa
 
 # New version plotting error rates vs length instead of correct/incorrect
 
-pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+#pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
 
 par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
@@ -262,7 +262,7 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
 
 ####### ggplot2 length analysis with r^2 / p-value / regression lines
 
-pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+#pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
 par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
 
@@ -298,7 +298,7 @@ summary(dad.glm)
 # Ensure folder exists
 if (!dir.exists("figures")) dir.create("figures")
 
-pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+#pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
 
 # Merge group names and clean data
 correct_plot_data <- correct_by_length %>%
@@ -324,7 +324,7 @@ p <- ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
 print(p)
 
 # Close the device
-dev.off()
+#dev.off()
 
 
 
