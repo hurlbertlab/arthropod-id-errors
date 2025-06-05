@@ -287,10 +287,10 @@ ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
 
 
 # Calculate p-values based on generalized linear models (glms) that don't assume a linear relationship
-bug.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'truebugs'], family = 'binomial')
+bug.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'truebugs',], family = 'binomial')
 summary(bug.glm)
 
-dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'daddy longlegs' & correctness_table$Length < 20], family = 'binomial')
+dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'daddylonglegs' & correctness_table$Length < 20, ], family = 'binomial')
 summary(dad.glm)
 
 ################
@@ -391,9 +391,9 @@ gameplaydf[gameplaydf == -Inf | gameplaydf == Inf] = NA
 #################################################
 
 # Compare first vs best for each subscore category
-wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy) # p = 9.8e-6
-wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy) # p = 1.7e-5
-wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found)     # p = 8.8e=6
+wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 9.8e-6
+wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 1.7e-5
+wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 8.8e=6
 
 #pdf('figures/game_scores.pdf', height = 5, width = 7)
 par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
@@ -406,9 +406,9 @@ axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
 mtext("Accuracy", side = 2, line = 3, cex = 2)
 mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
 mtext(c("% Found", "Identification", "Length\nestimation"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
-text(2.3, 25, labels = "wilcoxon = 9.8e-6")
-text(4.5, 35, labels = "wilcoxon = 1.7e-5")
-text(7, 20, labels = "wilcoxon = 8.8e-6")
+text(2.3, 25, labels = "p = 9.8e-6") # update
+text(4.5, 35, labels = "p = 1.7e-5") # update
+text(7, 20, labels = "p = 8.8e-6") # update
 
 
 #print(game_scores)
