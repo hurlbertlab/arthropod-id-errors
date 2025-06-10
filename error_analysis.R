@@ -14,8 +14,6 @@ library(ggpubr)
 
 # Read in raw data
 
-setwd("C:/Users/ellen27/Documents/")
-
 expert_ID = read.csv("2025-04-14_ExpertIdentification.csv")
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
