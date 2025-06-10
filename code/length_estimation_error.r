@@ -19,7 +19,8 @@ url = "https://docs.google.com/spreadsheets/d/1j3ZC6ED_yPXXu9ESuRMzKWprlg7U-0xCP
 
 results = gsheet2tbl(url)
 
-names(results)[3] = 'Group'
+names(results)[3:9] = c('Group', 'Specimen1_8', 'Specimen2_21', 'Specimen3_6', 
+                        'Specimen4_31', 'Specimen5_12', 'Specimen6_19')
 
 results$color = case_when(results$Group == 'A' ~ 'dodgerblue',
                           results$Group == 'B' ~ 'salmon',
