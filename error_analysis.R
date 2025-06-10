@@ -14,8 +14,6 @@ library(ggpubr)
 
 # Read in raw data
 
-setwd("C:/Users/ellen27/Documents/")
-
 expert_ID = read.csv("2025-04-14_ExpertIdentification.csv")
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
@@ -261,29 +259,30 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
 }
 
 ####### ggplot2 length analysis with r^2 / p-value / regression lines
+####### straight linear lines not appropriate --- delete 
 
-#pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
-par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
-    cex.axis = 1.5, cex.main = 1.8)
-
-# Merge group names and cleaning data (deleting NA values)
-correct_plot_data <- correct_by_length %>%
-  left_join(arthGroupNames, by = c("StandardGroup" = "originalName")) %>%
-  filter(!is.na(Length), !is.na(errorRate), !is.na(nObs), nObs > 0)
-
-# Plot with regression and correlation stats
-ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
-  geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
-  geom_smooth(method = "lm", se = FALSE, color = "blue", linetype = "solid", linewidth = 0.8) +
-  stat_cor(aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
-           label.x.npc = "left", label.y.npc = "top", size = 3.5) +
-  geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
-  facet_wrap(~ revisedName, scales = "free_x") +
-  labs(x = "Length", y = "Error Rate") +
-  theme_minimal() +
-  theme(strip.text = element_text(size = 10),
-        axis.text = element_text(size = 8),
-        legend.position = "none")
+# #pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+# par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
+#     cex.axis = 1.5, cex.main = 1.8)
+# 
+# # Merge group names and cleaning data (deleting NA values)
+# correct_plot_data <- correct_by_length %>%
+#   left_join(arthGroupNames, by = c("StandardGroup" = "originalName")) %>%
+#   filter(!is.na(Length), !is.na(errorRate), !is.na(nObs), nObs > 0)
+# 
+# # Plot with regression and correlation stats
+# ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
+#   geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
+#   geom_smooth(method = "lm", se = FALSE, color = "blue", linetype = "solid", linewidth = 0.8) +
+#   stat_cor(aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
+#            label.x.npc = "left", label.y.npc = "top", size = 3.5) +
+#   geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
+#   facet_wrap(~ revisedName, scales = "free_x") +
+#   labs(x = "Length", y = "Error Rate") +
+#   theme_minimal() +
+#   theme(strip.text = element_text(size = 10),
+#         axis.text = element_text(size = 8),
+#         legend.position = "none")
 
 
 # Calculate p-values based on generalized linear models (glms) that don't assume a linear relationship
@@ -293,17 +292,53 @@ summary(bug.glm)
 dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'daddylonglegs' & correctness_table$Length < 20, ], family = 'binomial')
 summary(dad.glm)
 
-################
+ant.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'ant' & correctness_table$Length < 20, ], family = 'binomial')
+summary(ant.glm)
+
+aph.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'aphid' & correctness_table$Length < 20, ], family = 'binomial')
+summary(aph.glm)
+
+bee.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'bee' & correctness_table$Length < 20, ], family = 'binomial')
+summary(bee.glm)
+
+beet.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'beetle' & correctness_table$Length < 20, ], family = 'binomial')
+summary(beet.glm)
+
+cat.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'caterpillar' & correctness_table$Length < 20, ], family = 'binomial')
+summary(cat.glm)
+
+fly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'fly' & correctness_table$Length < 20, ], family = 'binomial')
+summary(fly.glm)
+
+ghop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'grasshopper' & correctness_table$Length < 20, ], family = 'binomial')
+summary(ghop.glm)
+
+lhop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'leafhopper' & correctness_table$Length < 20, ], family = 'binomial')
+summary(lhop.glm)
+
+moth.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'moths' & correctness_table$Length < 20, ], family = 'binomial')
+summary(moth.glm)
+
+#sawfly larvae not going thru
+sfly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'sawfly larvae' & correctness_table$Length < 20, ], family = 'binomial')
+summary(sfly.glm)
+
+spi.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'spider' & correctness_table$Length < 20, ], family = 'binomial')
+summary(spi.glm)
+
+################ Notable error rates only (distinct/easily ID'd species filtered out)
 
 # Ensure folder exists
 if (!dir.exists("figures")) dir.create("figures")
 
 #pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
 
-# Merge group names and clean data
+# Merge group names and clean
 correct_plot_data <- correct_by_length %>%
   left_join(arthGroupNames, by = c("StandardGroup" = "originalName")) %>%
-  filter(!is.na(Length), !is.na(errorRate), !is.na(nObs), nObs > 0)
+  filter(!is.na(Length), !is.na(errorRate), !is.na(nObs), nObs > 0, StandardGroup %in%
+           c("aphid", "bee", "daddylonglegs", "moths", "truebugs", "grasshopper"))
+         
 
 # Create the plot object
 p <- ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
