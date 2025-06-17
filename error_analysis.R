@@ -137,7 +137,7 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupR
   scale_fill_manual(
     values = color_values,
     breaks = sort(names(color_values)),  
-    name = "Actual Group") +
+    name = "Arthropod Group") +
   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
   labs(x = "Actual Group", 
        y = "% Error Rate", 
