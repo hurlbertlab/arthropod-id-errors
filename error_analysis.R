@@ -106,7 +106,7 @@ stacked = ggplot(d2, aes(fill = StandardGroupRevised, y = rate,
    scale_y_continuous(breaks = seq(0, 30, by = 5)) +
    labs(
      x = "Originally Reported As...",
-     y = "Error Rate",
+     y = "% Error Rate",
      fill = "Actual Group"
    ) +
    theme_bw() +
@@ -116,7 +116,7 @@ stacked = ggplot(d2, aes(fill = StandardGroupRevised, y = rate,
      axis.title = element_text(size = 16),
      axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
      axis.text.y = element_text(size = 14),
-     plot.margin = unit(c(1, .5, .2, .5), "cm")
+     plot.margin = unit(c(0.1, .5, .2, .5), "cm")
    )
 
 #pdf('figures/misidentified1.pdf', height = 5, width = 7)
@@ -140,7 +140,7 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupR
     name = "Actual Group") +
   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
   labs(x = "Actual Group", 
-       y = "Error Rate", 
+       y = "% Error Rate", 
        #title = "Most Common Misidentifications", 
        fill = "Reported As") +
   theme_bw() + 
@@ -151,7 +151,7 @@ rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupR
         axis.title = element_text(size = 16),
         axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
         axis.text.y = element_text(size = 14)) +
-  theme(plot.margin = unit(c(1,.5,.2,.5), "cm"))
+  theme(plot.margin = unit(c(0,.5,.2,.5), "cm"))
 
 #pdf('figures/misidentified2.pdf', height = 5, width = 7)
 print(rev_stacked)
@@ -343,7 +343,9 @@ correct_plot_data <- correct_by_length %>%
 # Create the plot object
 p <- ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
   geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
-  geom_smooth(method = "lm", se = FALSE, color = "blue", linewidth = 0.8) +
+  stat_smooth(method = "glm", se = TRUE, color = "blue", linewidth = 0.5) +
+  #geom_line(aes(y = aph.glm), color = "blue") +
+  #geom_smooth(method = "lm", se = FALSE, color = "blue", linewidth = 0.8) +
   stat_cor(method = "pearson",
            aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
            label.x.npc = "left", label.y.npc = "top", size = 3.5) +
