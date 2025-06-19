@@ -15,7 +15,7 @@ library(stringr)
 
 
 # Survey results with length estimations
-url = "https://docs.google.com/spreadsheets/d/1j3ZC6ED_yPXXu9ESuRMzKWprlg7U-0xCPn36Fc7wZ_0/edit?resourcekey#gid=1343609097"
+url = "https://docs.google.com/spreadsheets/d/1j3ZC6ED_yPXXu9ESuRMzKWprlg7U-0xCPn36Fc7wZ_0/edit?resourcekey=&gid=1690406713#gid=1690406713"
 
 results = gsheet2tbl(url)
 
@@ -30,49 +30,12 @@ results$symbol = case_when(results$Group == 'A' ~ 17,
                           results$Group == 'B' ~ 15,
                           results$Group == 'C' ~ 16)
 
-plot(rep(1, nrow(results)), results$Specimen1_8, col = results$color, 
-     pch= results$symbol, cex = 1.5, xlim = c(0.5, 6.5), 
-     ylim = c(0, 60), xlab = 'Specimen Number', ylab = 'Length estimate (mm)')
-
-points(rep(2, nrow(results)), results$Specimen2_21, col = results$color, pch = results$symbol, cex = 1.5)
-
-points(rep(3, nrow(results)), results$Specimen3_6, col = results$color, pch = results$symbol, cex = 1.5)
-
-points(rep(4, nrow(results)), results$Specimen4_31, col = results$color, pch = results$symbol, cex = 1.5)
-       
-points(rep(5, nrow(results)), results$Specimen5_12, col = results$color, pch = results$symbol, cex = 1.5)
-
-points(rep(6, nrow(results)), results$Specimen6_19, col = results$color, pch = results$symbol, cex = 1.5)
-
-points(1:6, c(8, 21, 6, 31, 12, 19), pch = 18, col = 'black', cex = 1.3)
-
-
-
 # One student (row 10) measured in cm, while one student (row 4) measured in tenths of mm.
 
 # Plotting revised data
 results2 = results
 results2[4, 4:9] = results[4, 4:9]/10
 results2[10, 4:9] = results[10, 4:9]*10
-
-par(mfrow = c(1,1))
-plot(rep(1, nrow(results2)), results2$Specimen1_8, col = results2$color, 
-     pch= results2$symbol, cex = 1.5, xlim = c(0.5, 6.5), 
-     ylim = c(0, 45), xlab = 'Specimen Number', ylab = 'Length estimate (mm)')
-
-points(rep(2, nrow(results2)), results2$Specimen2_21, col = results2$color, pch = results2$symbol, cex = 1.5)
-
-points(rep(3, nrow(results2)), results2$Specimen3_6, col = results2$color, pch = results2$symbol, cex = 1.5)
-
-points(rep(4, nrow(results2)), results2$Specimen4_31, col = results2$color, pch = results2$symbol, cex = 1.5)
-
-points(rep(5, nrow(results2)), results2$Specimen5_12, col = results2$color, pch = results2$symbol, cex = 1.5)
-
-points(rep(6, nrow(results2)), results2$Specimen6_19, col = results2$color, pch = results2$symbol, cex = 1.5)
-
-points(1:6, c(8, 21, 6, 31, 12, 19), pch = 18, col = 'black', cex = 1.3)
-
-legend("topleft", legend = c("Control", "Thumb", "Ruler"), pch = c(17, 15, 16), col = c('dodgerblue', 'salmon', 'limegreen'))
 
 
 long = pivot_longer(results2, cols = Specimen1_8:Specimen6_19, names_to = "Specimen")
@@ -93,3 +56,8 @@ abline(h = 0, lty = 'dashed')
 mtext(c("Control", "Thumb", "Ruler"), 1, at = 1:3, line = 1, cex = 1.3)
 text(2, 68, "Medians:")
 text(1:3, rep(50, 3), c("-37.5%", "-11.5%", "-3.2%"))
+
+
+# Reorganized file for conducting Wilcoxon tests between treatment groups
+
+lengthdata = read.csv('data/length_estimation_errors.csv')
