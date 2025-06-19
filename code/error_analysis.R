@@ -902,3 +902,21 @@ for (arth in arthGroupsWeWant[1:12]) {
 mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
 
 
+
+# Old length multipanel plot that can be modified / prettified
+par(mfrow = c(4,3), mar=c(2.5,4,0,1), oma = c(4, 1, 1, 2))
+
+for (arth in arthGroupsWeWant[1:12]) { 
+  
+  
+  tmp = correct_by_length[correct_by_length$StandardGroup == arth,]
+  
+  plot(tmp$Length[tmp$StandardGroup == arth],
+       tmp$errorRate[tmp$StandardGroup == arth], pch = 16,
+       cex = log10(tmp$nObs[tmp$StandardGroup == arth])+.2,
+       xlab = "", las = 1, ylab = "")
+  
+  title(arth, line = -2.5)
+  
+}
+mtext("Length (mm)", 1.3, cex = 1, outer = TRUE, line = 1)
