@@ -205,6 +205,7 @@ print(commonness)
 correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
   select(OriginalGroup, StandardGroup, Length) %>% 
   filter(OriginalGroup %in% arthGroupsWeWant) %>% 
+  #filter(!(OriginalGroup == 'daddylonglegs' & Length > 10)) %>%
   mutate(agreement = OriginalGroup==StandardGroup, binary = as.integer(agreement)) %>% 
   group_by(OriginalGroup, Length)
   
@@ -239,7 +240,6 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
   
   text(15, 40, paste("r =",round(scoretest$estimate,2)))
   
-  #!!! sometimes this plot shows up, sometimes it doesn't
   
 }
 
@@ -343,6 +343,7 @@ correct_plot_data <- correct_by_length %>%
 # Create the plot object
 p <- ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
   geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
+  xlim(0, 40) +
   stat_smooth(method = "glm", se = TRUE, color = "blue", linewidth = 0.5) +
   #geom_line(aes(y = aph.glm), color = "blue") +
   #geom_smooth(method = "lm", se = FALSE, color = "blue", linewidth = 0.8) +
@@ -351,7 +352,7 @@ p <- ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
            label.x.npc = "left", label.y.npc = "top", size = 3.5) +
   geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
   facet_wrap(~ revisedName, scales = "free_x") +
-  labs(x = "Length", y = "Error Rate") +
+  labs(x = "Length", y = "% Error Rate") +
   theme_minimal() +
   theme(strip.text = element_text(size = 10),
         axis.text = element_text(size = 8),
