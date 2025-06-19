@@ -14,16 +14,16 @@ library(ggpubr)
 
 # Read in raw data
 
-expert_ID = read.csv("2025-04-14_ExpertIdentification.csv")
+expert_ID = read.csv("data/2025-06-17_ExpertIdentification.csv")
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
 
 # Fix two records manually that the user assumed originally were sawfly larvae (but in one case forgot to check the box)
 expert_ID$OriginalGroup[expert_ID$ArthropodSightingFK %in% c(116543,129308)] = 'sawfly larvae'
 
-surveys = read.csv("2025-04-14_Survey.csv")
-game = read.csv("2025-04-14_VirtualSurveyScore.csv")
-arthro_sight = read.csv("2025-04-14_ArthropodSighting.csv")
+surveys = read.csv("data/2025-06-17_Survey.csv", quote = '\"', fill = T)
+game = read.csv("data/2025-06-17_VirtualSurveyScore.csv")
+arthro_sight = read.csv("data/2025-06-17_ArthropodSighting.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:SawflyUpdated:number of ID's with that pair 
 
@@ -292,38 +292,38 @@ summary(bug.glm)
 dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'daddylonglegs' & correctness_table$Length < 20, ], family = 'binomial')
 summary(dad.glm)
 
-ant.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'ant' & correctness_table$Length < 20, ], family = 'binomial')
+ant.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'ant', ], family = 'binomial')
 summary(ant.glm)
 
-aph.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'aphid' & correctness_table$Length < 20, ], family = 'binomial')
+aph.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'aphid', ], family = 'binomial')
 summary(aph.glm)
 
-bee.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'bee' & correctness_table$Length < 20, ], family = 'binomial')
+bee.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'bee', ], family = 'binomial')
 summary(bee.glm)
 
-beet.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'beetle' & correctness_table$Length < 20, ], family = 'binomial')
+beet.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'beetle', ], family = 'binomial')
 summary(beet.glm)
 
-cat.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'caterpillar' & correctness_table$Length < 20, ], family = 'binomial')
+cat.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'caterpillar', ], family = 'binomial')
 summary(cat.glm)
 
-fly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'fly' & correctness_table$Length < 20, ], family = 'binomial')
+fly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'fly', ], family = 'binomial')
 summary(fly.glm)
 
-ghop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'grasshopper' & correctness_table$Length < 20, ], family = 'binomial')
+ghop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'grasshopper', ], family = 'binomial')
 summary(ghop.glm)
 
-lhop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'leafhopper' & correctness_table$Length < 20, ], family = 'binomial')
+lhop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'leafhopper', ], family = 'binomial')
 summary(lhop.glm)
 
-moth.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'moths' & correctness_table$Length < 20, ], family = 'binomial')
+moth.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'moths', ], family = 'binomial')
 summary(moth.glm)
 
 #sawfly larvae not going thru
-sfly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'sawfly larvae' & correctness_table$Length < 20, ], family = 'binomial')
+sfly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'sawfly larvae', ], family = 'binomial')
 summary(sfly.glm)
 
-spi.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'spider' & correctness_table$Length < 20, ], family = 'binomial')
+spi.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'spider', ], family = 'binomial')
 summary(spi.glm)
 
 ################ Notable error rates only (distinct/easily ID'd species filtered out)
@@ -344,12 +344,9 @@ correct_plot_data <- correct_by_length %>%
 p <- ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
   geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
   xlim(0, 40) +
-  stat_smooth(method = "glm", se = TRUE, color = "blue", linewidth = 0.5) +
-  #geom_line(aes(y = aph.glm), color = "blue") +
-  #geom_smooth(method = "lm", se = FALSE, color = "blue", linewidth = 0.8) +
-  stat_cor(method = "pearson",
-           aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
-           label.x.npc = "left", label.y.npc = "top", size = 3.5) +
+  #stat_cor(method = "pearson",
+  #         aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
+  #         label.x.npc = "left", label.y.npc = "top", size = 3.5) +
   geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
   facet_wrap(~ revisedName, scales = "free_x") +
   labs(x = "Length", y = "% Error Rate") +
@@ -861,7 +858,7 @@ for (arth in lengthdf$OriginalGroup) { plot(1:3, lengthdf[lengthdf$OriginalGroup
 
 par(mfrow = c(4,3), mar=c(2.5,4,0,1), oma = c(4, 1, 1, 2))
 
-for (arth in arthGroupsWeWant) { 
+for (arth in arthGroupsWeWant[1:12]) { 
   
   arthSubset = filter(correctness_table, StandardGroup == arth)
   
