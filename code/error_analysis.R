@@ -11,6 +11,7 @@ library(gridExtra)
 library(lubridate)
 library(vioplot)
 library(ggpubr)
+library(RColorBrewer)
 
 # Read in raw data
 
@@ -27,22 +28,32 @@ arthro_sight = read.csv("data/2025-06-17_ArthropodSighting.csv")
 
 # true_counts displays OriginalGroup:StandardGroup:SawflyUpdated:number of ID's with that pair 
 
-true_counts = expert_ID %>%
-  select(OriginalGroup, StandardGroup, SawflyUpdated) %>%
-   group_by(OriginalGroup, StandardGroup, SawflyUpdated) %>%
-   summarize(number = n())
+# total_OG_obs is the total number of observations submitted as a given group,
+# and will be used as the denominator for calculating error rates for the
+# first stacked bar chart ("Originally submitted as...")
+total_OG_counts = expert_ID %>%
+  group_by(OriginalGroup) %>%
+  summarize(total_OG_obs = n())
 
-# total_counts shows total amount of OriginalGroup IDs 
-total_counts = expert_ID %>%
-   group_by(OriginalGroup) %>%
-   summarize(total_OGID = n())
-  
-# use left_join() to compare total with proportion from true_counts
-error_num = true_counts %>%
-  group_by(OriginalGroup, SawflyUpdated) %>% 
-  left_join(total_counts, true_counts, by = c("OriginalGroup" = "OriginalGroup")) %>%
-  mutate(rate = round((number / total_OGID) * 100, 1)) %>%
-  arrange(OriginalGroup, desc(rate)) 
+# total_SG_obs is the total number of observations of each StandardGroup,
+# and will be used as the denominator for calculating error rates for the
+# second stacked bar chart ("Actual Group")
+total_SG_counts = expert_ID %>%
+  group_by(StandardGroup) %>%
+  summarize(total_SG_obs = n())
+
+# Lumping all StandardGroup id's that are not in arthGroupsWeWant in a category called "other"
+# for which we will calculate a single lumped error rate that should be included in bar stack
+error_num = expert_ID %>%
+  select(OriginalGroup, StandardGroup, SawflyUpdated) %>%
+  mutate(StandardGroup2 = ifelse(StandardGroup %in% arthGroupsWeWant, StandardGroup, "other")) %>%
+  group_by(OriginalGroup, StandardGroup2, SawflyUpdated) %>%
+  summarize(number = n()) %>% 
+  left_join(total_OG_counts, by = "OriginalGroup") %>%
+  left_join(total_SG_counts, by = c("StandardGroup2" = "StandardGroup")) %>%
+  mutate(errorRate1 = round((number / total_OG_obs) * 100, 2),
+         errorRate2 = round((number / total_SG_obs) * 100, 2)) %>%
+  arrange(OriginalGroup, desc(errorRate1)) 
 
 
 #######################################################################
@@ -66,44 +77,76 @@ arthGroupNames = data.frame(originalName = arthGroupsWeWant,
 ####### Plot: Stacked bar graph: "What Arthropods are Mistaken For" #######
 
 only_error_num = error_num %>%
-  filter(OriginalGroup != StandardGroup,
-         StandardGroup %in% arthGroupsWeWant, 
+  filter(OriginalGroup != StandardGroup2,
+         #StandardGroup %in% arthGroupsWeWant, 
          OriginalGroup %in% arthGroupsWeWant) %>%
-  left_join(arthGroupNames, by = c('StandardGroup' = 'originalName')) %>%
+  left_join(arthGroupNames[, c('originalName', 'revisedName')], by = c('StandardGroup2' = 'originalName')) %>%
   rename(StandardGroupRevised = revisedName) %>%
-  left_join(arthGroupNames, by = c('OriginalGroup' = 'originalName')) %>%
-  rename(OriginalGroupRevised = revisedName) 
+  left_join(arthGroupNames[, c('originalName', 'revisedName')], by = c('OriginalGroup' = 'originalName')) %>%
+  rename(OriginalGroupRevised = revisedName) %>%
+  mutate(StandardGroupRevised = ifelse(is.na(StandardGroupRevised), "other", StandardGroupRevised))
 
-only_error_num$StandardGroupRevised[only_error_num$SawflyUpdated == 1] = "sawfly larvae"
+# Order groups according to descending summed errorRate1
+order1 = only_error_num %>%
+  group_by(OriginalGroupRevised) %>%
+  summarize(totalError1 = sum(errorRate1, na.rm = T)) %>%
+  arrange(desc(totalError1))
 
-d2 = only_error_num
-d3 = aggregate(d2$rate, by=list(d2$OriginalGroupRevised), FUN = sum)
-d3 = d3[order(-d3$x),]
-str = d3$Group.1
-d2$OriginalGroupRevised = factor(d2$OriginalGroupRevised, levels=str)
+order2 = only_error_num %>%
+  group_by(StandardGroupRevised) %>%
+  summarize(totalError2 = sum(errorRate2, na.rm = T)) %>%
+  arrange(desc(totalError2))
+
+
+only_error_num$OriginalGroupRevised = factor(only_error_num$OriginalGroupRevised, 
+                                             levels = order1$OriginalGroupRevised)
+
+only_error_num$StandardGroupRevised = factor(only_error_num$StandardGroupRevised, 
+                                             levels = order2$StandardGroupRevised)
+
+# Revise colors?
+colors = brewer.pal(12, "Paired")
 
 color_values = c(
-  "ants" = "#8da0cb",
-  "aphids" = "#1b9e77",
-  "bees, wasps" = "#d95f02",
-  "beetles" = "#a6761d",
-  "caterpillars" = "#666666",
-  "daddy longlegs" = "#66c2a5",
-  "flies" = "#e7298a",
-  "grasshoppers" = "#66a61e",
-  "leafhoppers" = "#fc8d62",
-  "moths" = "#e6ab02",
-  "sawfly larvae" = "#e78ac3",
-  "spiders" = "#a6d854",
-  "true bugs" = "#7570b3")
+  "ants" = colors[1],
+  "aphids" = colors[2],
+  "bees, wasps" = colors[3],
+  "beetles" = colors[4],
+  "caterpillars" = colors[5],
+  "daddy longlegs" = colors[6],
+  "flies" = colors[7],
+  "grasshoppers" = colors[8],
+  "leafhoppers" = colors[9],
+  "moths" = colors[10],
+  "sawfly larvae" = "gray90",
+  "spiders" = colors[11],
+  "true bugs" = colors[12],
+  "other" = "gray50")
 
-stacked = ggplot(d2, aes(fill = StandardGroupRevised, y = rate, 
+# old colors
+#color_values = c(
+#  "ants" = "#8da0cb",
+#  "aphids" = "#1b9e77",
+#  "bees, wasps" = "#d95f02",
+#  "beetles" = "#a6761d",
+#  "caterpillars" = "yellow",
+#  "daddy longlegs" = "#66c2a5",
+#  "flies" = "#e7298a",
+#  "grasshoppers" = "#66a61e",
+#  "leafhoppers" = "#fc8d62",
+#  "moths" = "#e6ab02",
+#  "sawfly larvae" = "#e78ac3",
+#  "spiders" = "#a6d854",
+#  "true bugs" = "#7570b3",
+#  "other" = "gray50")
+
+stacked = ggplot(only_error_num, aes(fill = StandardGroupRevised, y = errorRate1, 
   x = OriginalGroupRevised)) +   geom_bar(position = 'stack', stat = 'identity') +
   scale_fill_manual(
     values = color_values,
     breaks = sort(names(color_values)),  
     name = "Actual Group") +
-   scale_y_continuous(breaks = seq(0, 30, by = 5)) +
+   scale_y_continuous(breaks = seq(0, 40, by = 5)) +
    labs(
      x = "Originally Reported As...",
      y = "% Error Rate",
@@ -125,20 +168,18 @@ print(stacked)
 
 
 ######## Plot:"What are certain arthropods typically suspected as?" ##########
+only_error_num$StandardGroupRevised = factor(only_error_num$StandardGroupRevised, 
+                                             levels = order2$StandardGroupRevised)
 
-d4 = aggregate(d2$rate, by=list(d2$StandardGroupRevised), FUN = sum)
-d4 = d4[order(-d4$x),]
-str2 = d4$Group.1
-d2$StandardGroupRevised = factor(d2$StandardGroupRevised, levels=str2)
-
-rev_stacked = ggplot(d2, aes(fill=OriginalGroupRevised, y=rate, x=StandardGroupRevised)) +
+rev_stacked = ggplot(only_error_num[only_error_num$StandardGroup2 != "other",], 
+                     aes(fill=OriginalGroupRevised, y=errorRate2, x=StandardGroupRevised)) +
   geom_bar(position='stack', 
            stat = 'identity') + 
   scale_fill_manual(
     values = color_values,
     breaks = sort(names(color_values)),  
     name = "Arthropod Group") +
-  scale_y_continuous(breaks = seq(0, 30, by = 5)) +
+  scale_y_continuous(breaks = seq(0, 60, by = 10)) +
   labs(x = "Actual Group", 
        y = "% Error Rate", 
        #title = "Most Common Misidentifications", 
