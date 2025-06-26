@@ -246,7 +246,7 @@ print(commonness)
 
 correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
   select(OriginalGroup, StandardGroup, Length) %>% 
-  filter(OriginalGroup %in% arthGroupsWeWant) %>% 
+  filter(StandardGroup %in% arthGroupsWeWant) %>% 
   #filter(!(OriginalGroup == 'daddylonglegs' & Length > 10)) %>%
   mutate(agreement = OriginalGroup==StandardGroup, binary = as.integer(agreement)) %>% 
   group_by(OriginalGroup, Length)
@@ -280,7 +280,7 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
   title(arthGroupNames$revisedName[arthGroupNames$originalName == arth], line = -1.5)
   abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
   
-  text(15, 40, paste("r =",round(scoretest$estimate,2)))
+  #text(15, 40, paste("r =",round(scoretest$estimate,2)))
   
   
 }
@@ -328,44 +328,44 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
 
 
 # Calculate p-values based on generalized linear models (glms) that don't assume a linear relationship
-bug.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'truebugs',], family = 'binomial')
+bug.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'truebugs',], family = 'binomial')
 summary(bug.glm)
 
-dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'daddylonglegs' & correctness_table$Length < 20, ], family = 'binomial')
+dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'daddylonglegs' & correctness_table$Length < 20, ], family = 'binomial')
 summary(dad.glm)
 
-ant.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'ant', ], family = 'binomial')
+ant.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'ant', ], family = 'binomial')
 summary(ant.glm)
 
-aph.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'aphid', ], family = 'binomial')
+aph.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'aphid', ], family = 'binomial')
 summary(aph.glm)
 
-bee.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'bee', ], family = 'binomial')
+bee.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'bee', ], family = 'binomial')
 summary(bee.glm)
 
-beet.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'beetle', ], family = 'binomial')
+beet.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'beetle', ], family = 'binomial')
 summary(beet.glm)
 
-cat.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'caterpillar', ], family = 'binomial')
+cat.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'caterpillar', ], family = 'binomial')
 summary(cat.glm)
 
-fly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'fly', ], family = 'binomial')
+fly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'fly', ], family = 'binomial')
 summary(fly.glm)
 
-ghop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'grasshopper', ], family = 'binomial')
+ghop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'grasshopper', ], family = 'binomial')
 summary(ghop.glm)
 
-lhop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'leafhopper', ], family = 'binomial')
+lhop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'leafhopper', ], family = 'binomial')
 summary(lhop.glm)
 
-moth.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'moths', ], family = 'binomial')
+moth.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'moths', ], family = 'binomial')
 summary(moth.glm)
 
 #sawfly larvae not going thru
-sfly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'sawfly larvae', ], family = 'binomial')
+sfly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'sawfly larvae', ], family = 'binomial')
 summary(sfly.glm)
 
-spi.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$OriginalGroup == 'spider', ], family = 'binomial')
+spi.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'spider', ], family = 'binomial')
 summary(spi.glm)
 
 ################ Notable error rates only (distinct/easily ID'd species filtered out)
