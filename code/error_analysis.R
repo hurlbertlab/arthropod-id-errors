@@ -257,48 +257,62 @@ correct_by_length = correctness_table %>%  #counts # of incorrect length observa
             nWrong = sum(!agreement),
             errorRate = 100*nWrong/nObs)
 
-# New version plotting error rates vs length instead of correct/incorrect
+# Plotting error rates vs length and running glms
+
+length_estimates = data.frame(StandardGroup = NULL,
+                              length_estimate = NULL,
+                              p = NULL)
 
 #pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
 
-par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
+par(mfrow = c(3,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
 
 # Panels in order of error trends:
-# --the first 6 panels have uniformly low error rates regardless of length
+# --not showing caterpillars, ants and spiders which have uniformly low error rates
 # --the next 5 panels show reduced error rates for larger specimens
 # --aphids just have high error rates
 
-for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
-               "grasshopper", "bee", "daddylonglegs", "moths", "truebugs", "aphid")) { 
+for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle", 
+               "grasshopper", "fly", "daddylonglegs", "aphid")) { 
+  
+  # GLM
+  tmp.glm = glm(1 - binary ~ Length, 
+                data = correctness_table[correctness_table$StandardGroup == arth,], 
+                family = 'binomial')
+  
+  tmp.df = data.frame(StandardGroup = arth,
+                      length_estimate = summary(tmp.glm)$coefficients[2, 1],
+                      p = summary(tmp.glm)$coefficients[2, 4])
+  
+  length_estimates = rbind(length_estimates, tmp.df)
+  
+  p_display = case_when(tmp.df$p < .0001 ~ '***',
+                        tmp.df$p < .001 ~ '**',
+                        round(tmp.df$p,2) <= .01 ~ '*',
+                        .default = '')
+
+  # Plot
   
   arthSubset = filter(correct_by_length, StandardGroup == arth)
   
   plot(arthSubset$Length, arthSubset$errorRate, xlab = "", las = 1, 
        ylab = "", cex = log10(arthSubset$nObs)+.2, pch = 16, col = 'gray40',
        xlim = c(0, arthGroupNames$maxLength[arthGroupNames$originalName == arth]), ylim = c(0, 80))
-  title(arthGroupNames$revisedName[arthGroupNames$originalName == arth], line = -1.5)
+  
+  title(paste0(arthGroupNames$revisedName[arthGroupNames$originalName == arth],"\n",p_display), 
+        line = -3, cex.main = 1.7)
+  
   abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
   
-  #text(15, 40, paste("r =",round(scoretest$estimate,2)))
-  
-  
+ 
 }
 
-#Tile plots:
-par(mfrow = c(3, 4))  # 3 rows, 4 columns — adjust as needed
+mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 2)
+mtext("Error rate (%)", 2, cex = 2, outer = TRUE, line = 1.5)
 
-for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
-               "grasshopper", "bee", "daddylonglegs", "moths", "truebugs", "aphid")) { 
-  
-  arthSubset = filter(correct_by_length, StandardGroup == arth)
-  
-  plot(arthSubset$Length, arthSubset$errorRate, xlab = "", las = 1, 
-       ylab = "", cex = log10(arthSubset$nObs)+.2, pch = 16, col = 'gray40',
-       xlim = c(0, arthGroupNames$maxLength[arthGroupNames$originalName == arth]), ylim = c(0, 80))
-  title(arthGroupNames$revisedName[arthGroupNames$originalName == arth], line = -1.5)
-  abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
-}
+
+
 
 ####### ggplot2 length analysis with r^2 / p-value / regression lines
 ####### straight linear lines not appropriate --- delete 
@@ -331,7 +345,7 @@ for (arth in c("caterpillar", "ant", "spider", "beetle", "leafhopper", "fly",
 bug.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'truebugs',], family = 'binomial')
 summary(bug.glm)
 
-dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'daddylonglegs' & correctness_table$Length < 20, ], family = 'binomial')
+dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'daddylonglegs' & correctness_table$Length, ], family = 'binomial')
 summary(dad.glm)
 
 ant.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'ant', ], family = 'binomial')
