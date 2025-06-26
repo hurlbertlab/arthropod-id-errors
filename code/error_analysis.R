@@ -26,7 +26,20 @@ surveys = read.csv("data/2025-06-17_Survey.csv", quote = '\"', fill = T)
 game = read.csv("data/2025-06-17_VirtualSurveyScore.csv")
 arthro_sight = read.csv("data/2025-06-17_ArthropodSighting.csv")
 
-# true_counts displays OriginalGroup:StandardGroup:SawflyUpdated:number of ID's with that pair 
+
+# Arthropod groups and their revised labels
+arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar", 
+                     "daddylonglegs", "fly", "grasshopper", "leafhopper",
+                     "moths", "spider", "truebugs", "sawfly larvae")
+
+arthGroupNames = data.frame(originalName = arthGroupsWeWant,
+                            revisedName = c("ants", "aphids", "bees, wasps", "beetles",
+                                            "caterpillars", "daddy longlegs", "flies",
+                                            "grasshoppers", "leafhoppers", "moths",
+                                            "spiders", "true bugs", "sawfly larvae"),
+                            maxLength = c(15, 10, 22, 30, 60, 15, 25, 40, 25, 25, 22, 35, 50))
+
+
 
 # total_OG_obs is the total number of observations submitted as a given group,
 # and will be used as the denominator for calculating error rates for the
@@ -61,18 +74,6 @@ error_num = expert_ID %>%
 #    Arthropod Mis-identification Analysis: On-Site / Field Data
 #
 ######################################################################
-
-arthGroupsWeWant = c("ant", "aphid", "bee", "beetle", "caterpillar", 
-                     "daddylonglegs", "fly", "grasshopper", "leafhopper",
-                     "moths", "spider", "truebugs", "sawfly larvae")
-
-arthGroupNames = data.frame(originalName = arthGroupsWeWant,
-                            revisedName = c("ants", "aphids", "bees, wasps", "beetles",
-                                            "caterpillars", "daddy longlegs", "flies",
-                                            "grasshoppers", "leafhoppers", "moths",
-                                            "spiders", "true bugs", "sawfly larvae"),
-                            maxLength = c(15, 10, 22, 30, 60, 15, 25, 40, 25, 25, 22, 35, 50))
-
 
 ####### Plot: Stacked bar graph: "What Arthropods are Mistaken For" #######
 
