@@ -259,20 +259,19 @@ correct_by_length = correctness_table %>%  #counts # of incorrect length observa
 
 # Plotting error rates vs length and running glms
 
+# Store parameter estimate and p-values from GLMs in this dataframe
 length_estimates = data.frame(StandardGroup = NULL,
                               length_estimate = NULL,
                               p = NULL)
 
 #pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
 
-par(mfrow = c(3,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
+par(mfrow = c(3,3), mar=c(2.5,4,1,1), oma = c(4, 4, 1, 1), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
 
 # Panels in order of error trends:
 # --not showing caterpillars, ants and spiders which have uniformly low error rates
-# --the next 5 panels show reduced error rates for larger specimens
-# --aphids just have high error rates
-
+# --
 for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle", 
                "grasshopper", "fly", "daddylonglegs", "aphid")) { 
   
@@ -287,12 +286,14 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
   
   length_estimates = rbind(length_estimates, tmp.df)
   
-  p_display = case_when(tmp.df$p < .0001 ~ '***',
-                        tmp.df$p < .001 ~ '**',
-                        round(tmp.df$p,2) <= .01 ~ '*',
-                        .default = '')
+  #p_display = case_when(tmp.df$p < .0001 ~ '***',
+  #                      tmp.df$p < .001 ~ '**',
+  #                      round(tmp.df$p,2) <= .01 ~ '*',
+  #                      .default = '')
+  p_display = if_else(round(tmp.df$p,2) <= .01, paste("p =", signif(tmp.df$p, 2)), '')
+  
 
-  # Plot
+  # Plot panel
   
   arthSubset = filter(correct_by_length, StandardGroup == arth)
   
@@ -300,87 +301,20 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
        ylab = "", cex = log10(arthSubset$nObs)+.2, pch = 16, col = 'gray40',
        xlim = c(0, arthGroupNames$maxLength[arthGroupNames$originalName == arth]), ylim = c(0, 80))
   
-  title(paste0(arthGroupNames$revisedName[arthGroupNames$originalName == arth],"\n",p_display), 
-        line = -3, cex.main = 1.7)
+  # Arthropod group title
+  title(arthGroupNames$revisedName[arthGroupNames$originalName == arth], 
+        line = -1.3, cex.main = 1.7)
+  # p-value
+  title(p_display, line = -3, cex.main = 1.3)
   
   abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
-  
- 
+
 }
 
 mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 2)
 mtext("Error rate (%)", 2, cex = 2, outer = TRUE, line = 1.5)
 
 
-
-
-####### ggplot2 length analysis with r^2 / p-value / regression lines
-####### straight linear lines not appropriate --- delete 
-
-# #pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
-# par(mfrow = c(4,3), mar=c(2.5,4,1,1), oma = c(4, 4, 0, 2), tck = -.03, mgp = c(2, .8, 0), 
-#     cex.axis = 1.5, cex.main = 1.8)
-# 
-# # Merge group names and cleaning data (deleting NA values)
-# correct_plot_data <- correct_by_length %>%
-#   left_join(arthGroupNames, by = c("StandardGroup" = "originalName")) %>%
-#   filter(!is.na(Length), !is.na(errorRate), !is.na(nObs), nObs > 0)
-# 
-# # Plot with regression and correlation stats
-# ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
-#   geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
-#   geom_smooth(method = "lm", se = FALSE, color = "blue", linetype = "solid", linewidth = 0.8) +
-#   stat_cor(aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
-#            label.x.npc = "left", label.y.npc = "top", size = 3.5) +
-#   geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
-#   facet_wrap(~ revisedName, scales = "free_x") +
-#   labs(x = "Length", y = "Error Rate") +
-#   theme_minimal() +
-#   theme(strip.text = element_text(size = 10),
-#         axis.text = element_text(size = 8),
-#         legend.position = "none")
-
-
-# Calculate p-values based on generalized linear models (glms) that don't assume a linear relationship
-bug.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'truebugs',], family = 'binomial')
-summary(bug.glm)
-
-dad.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'daddylonglegs' & correctness_table$Length, ], family = 'binomial')
-summary(dad.glm)
-
-ant.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'ant', ], family = 'binomial')
-summary(ant.glm)
-
-aph.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'aphid', ], family = 'binomial')
-summary(aph.glm)
-
-bee.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'bee', ], family = 'binomial')
-summary(bee.glm)
-
-beet.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'beetle', ], family = 'binomial')
-summary(beet.glm)
-
-cat.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'caterpillar', ], family = 'binomial')
-summary(cat.glm)
-
-fly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'fly', ], family = 'binomial')
-summary(fly.glm)
-
-ghop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'grasshopper', ], family = 'binomial')
-summary(ghop.glm)
-
-lhop.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'leafhopper', ], family = 'binomial')
-summary(lhop.glm)
-
-moth.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'moths', ], family = 'binomial')
-summary(moth.glm)
-
-#sawfly larvae not going thru
-sfly.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'sawfly larvae', ], family = 'binomial')
-summary(sfly.glm)
-
-spi.glm = glm(1 - binary ~ Length, data = correctness_table[correctness_table$StandardGroup == 'spider', ], family = 'binomial')
-summary(spi.glm)
 
 ################ Notable error rates only (distinct/easily ID'd species filtered out)
 
