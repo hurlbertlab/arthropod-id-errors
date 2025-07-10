@@ -284,8 +284,16 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
                       length_estimate = summary(tmp.glm)$coefficients[2, 1],
                       p = summary(tmp.glm)$coefficients[2, 4])
   
-  length_estimates = rbind(length_estimates, tmp.df)
+  #tmp.plot = effect_plot(tmp.glm, pred = Length, interval = TRUE, int.type = 'confidence', 
+  #                       y.label = 'Error rate', x.label = 'Length (mm)',
+  #                       main.title = arth)
   
+  #assign(paste0(arth, '.plot'), tmp.plot)
+  
+  length_estimates = rbind(length_estimates, tmp.df)
+
+
+
   #p_display = case_when(tmp.df$p < .0001 ~ '***',
   #                      tmp.df$p < .001 ~ '**',
   #                      round(tmp.df$p,2) <= .01 ~ '*',
@@ -313,6 +321,12 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
 
 mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 2)
 mtext("Error rate (%)", 2, cex = 2, outer = TRUE, line = 1.5)
+
+
+# Alternate ggplot2 plotting of responses using effect_plot()
+# ggarrange(truebugs.plot, leafhopper.plot, bee.plot, moths.plot, beetle.plot,
+#           grasshopper.plot, fly.plot, daddylonglegs.plot, aphid.plot,
+#           ncol = 3, nrow = 3)
 
 
 
