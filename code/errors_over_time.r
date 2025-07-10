@@ -110,8 +110,8 @@ error.glm = glmer(incorrect ~ scale(photoObsNum) + (1 | UserFKOfObserver),
 error.plot = effect_plot(error.glm, pred = photoObsNum, interval = TRUE, int.type = "confidence", 
             x.label = "Cumulative number of photo observations", y.label = "Error rate")
 
-error.plot + theme(axis.text.x = element_text(size = 14),
-          axis.text.y = element_text(size = 14),
-          axis.title.x = element_text(size = 16),
-          axis.title.y = element_text(size = 16))
+error.plot + theme(axis.text.x = element_text(size = 18),
+          axis.text.y = element_text(size = 18),
+          axis.title.x = element_text(size = 20),
+          axis.title.y = element_text(size = 20))
 
