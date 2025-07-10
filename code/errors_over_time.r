@@ -26,7 +26,12 @@ arths = read.csv(paste(github_raw, filter(data_links, grepl("ArthropodSighting.c
   rename(Group = "UpdatedGroup", BeetleLarva = "UpdatedBeetleLarva", Sawfly = "UpdatedSawfly") 
 
 
-# Create dataframe that has the cumulative number of surveys and errors by user
+# Create dataframe that has the cumulative number of surveys and photos, and 
+# cumulative error rate by user.
+# Here we exclude observations submitted as caterpillars, spiders, or ants which
+# are known to have extremely low error rates.
+# Error rate is the percent of observations that were incorrectly submitted 
+# (i.e., the percent of observations submitted as Group X that were not actually Group X).
 
 df = left_join(surveys, arths, by = c('ID' = 'SurveyFK')) %>%
   rename(ArthropodSightingFK = ID.y) %>%
@@ -37,7 +42,7 @@ df = left_join(surveys, arths, by = c('ID' = 'SurveyFK')) %>%
   group_by(UserFKOfObserver) %>%
   mutate(userSurveyNumber = row_number(),
          agreement = StandardGroup == OriginalGroup) %>%
-  filter(!OriginalGroup %in% c("unidentified", "other"), 
+  filter(!OriginalGroup %in% c("unidentified", "other", "caterpillar", "spider", "ant"), 
          !is.na(StandardGroup)) %>%
   mutate(photoObsNum = row_number(), 
          cumNumCorrect = cumsum(agreement),
@@ -50,8 +55,6 @@ userTotals = df %>%
             totalPhotos = max(photoObsNum)) %>%
   arrange(desc(totalPhotos))
 
-dfSelect = df %>%
-  filter(UserFKOfObserver %in% c(2763, 3654, 2020, 2024, 2809, 3165, 3204, 3625, 3654, 3661))
 
 # Function for making an error over time (vs. number of surveys) plot
 errorsOverTimePlot = function(UserID, dataframe = df, new = TRUE, ...) {
@@ -67,10 +70,6 @@ errorsOverTimePlot = function(UserID, dataframe = df, new = TRUE, ...) {
   
 }
 
-# Do plots for some example users, e.g. UserFKOfObserver 2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661
-
-dfSelect = df %>%
-  filter(UserFKOfObserver %in% c(3654, 2020, 2024, 2809, 3165, 3204, 3625, 3654, 3661))
 
 
 ## EXAMPLES:
@@ -81,22 +80,16 @@ errorsOverTimePlot(UserID = 2020, dataframe = df, col = 'dodgerblue', new = FALS
 
 ## Multi-panel figure:
 
-# first, create a set of panels with 3 rows and 4 columns; specify margins around each panel
-par(mfrow = c(3, 4), mar = c(5, 3, 1, 1))
+# Visualize the top 30 users by totalPhotos
+par(mfrow = c(5, 6), mar = c(5, 3, 1, 1))
 
 # Loop over several different user IDs to create a plot for each one
-for (u in c(2763, 3654, 2020, 2024, 2809, 3165, 3204, 3625, 3654, 3661)) { 
+for (u in userTotals$UserFKOfObserver[2:31]) { 
   
-  errorsOverTimePlot(u, dataframe = df, new = T, main = paste("UserID", u))
+  errorsOverTimePlot(u, dataframe = df, new = T, main = paste("UserID", u)) 
   
 }
 
-# (incomplete) Each plot in the multi-panel figure combined...
-#par(mfrow = c(1, 1), mar = c(5, 3, 1, 1))
-
-# Loop over several different user IDs to create a plot for each one
-for (u in c(2763, 3654, 2020, 2023, 2024, 2809, 3158, 3165, 3204, 3625, 3654, 3661)) 
-#   
 
 # Figure out how to create a dataframe that just has the cumulative number of photos FOR THAT GROUP, and error rates specific to THAT GROUP.
 
