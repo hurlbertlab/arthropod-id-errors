@@ -124,23 +124,6 @@ color_values = c(
   "true bugs" = colors[12],
   "other" = "gray50")
 
-# old colors
-#color_values = c(
-#  "ants" = "#8da0cb",
-#  "aphids" = "#1b9e77",
-#  "bees, wasps" = "#d95f02",
-#  "beetles" = "#a6761d",
-#  "caterpillars" = "yellow",
-#  "daddy longlegs" = "#66c2a5",
-#  "flies" = "#e7298a",
-#  "grasshoppers" = "#66a61e",
-#  "leafhoppers" = "#fc8d62",
-#  "moths" = "#e6ab02",
-#  "sawfly larvae" = "#e78ac3",
-#  "spiders" = "#a6d854",
-#  "true bugs" = "#7570b3",
-#  "other" = "gray50")
-
 stacked = ggplot(only_error_num, aes(fill = StandardGroupRevised, y = errorRate1, 
   x = OriginalGroupRevised)) +   geom_bar(position = 'stack', stat = 'identity') +
   scale_fill_manual(
@@ -257,7 +240,7 @@ correct_by_length = correctness_table %>%  #counts # of incorrect length observa
             nWrong = sum(!agreement),
             errorRate = 100*nWrong/nObs)
 
-# Plotting error rates vs length and running glms
+######### Plotting error rates vs length and running glms
 
 # Store parameter estimate and p-values from GLMs in this dataframe
 length_estimates = data.frame(StandardGroup = NULL,
@@ -268,6 +251,7 @@ length_estimates = data.frame(StandardGroup = NULL,
 
 par(mfrow = c(3,3), mar=c(2.5,4,1,1), oma = c(4, 4, 1, 1), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
+
 
 # Panels in order of error trends:
 # --not showing caterpillars, ants and spiders which have uniformly low error rates
@@ -285,8 +269,8 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
                       p = summary(tmp.glm)$coefficients[2, 4])
   
   #tmp.plot = effect_plot(tmp.glm, pred = Length, interval = TRUE, int.type = 'confidence', 
-  #                       y.label = 'Error rate', x.label = 'Length (mm)',
-  #                       main.title = arth)
+   #                      y.label = 'Error rate', x.label = 'Length (mm)',
+   #                      main.title = arth)
   
   #assign(paste0(arth, '.plot'), tmp.plot)
   
@@ -294,11 +278,11 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
 
 
 
-  #p_display = case_when(tmp.df$p < .0001 ~ '***',
-  #                      tmp.df$p < .001 ~ '**',
-  #                      round(tmp.df$p,2) <= .01 ~ '*',
-  #                      .default = '')
-  p_display = if_else(round(tmp.df$p,2) <= .01, paste("p =", signif(tmp.df$p, 2)), '')
+  p_display = case_when(tmp.df$p < .0001 ~ '***',
+                        tmp.df$p < .001 ~ '**',
+                        round(tmp.df$p,2) <= .01 ~ '*',
+                        .default = '')
+  #p_display = if_else(round(tmp.df$p,2) <= .01, paste("p =", signif(tmp.df$p, 2)), '')
   
 
   # Plot panel
@@ -430,9 +414,10 @@ gameplaydf[gameplaydf == -Inf | gameplaydf == Inf] = NA
 #################################################
 
 # Compare first vs best for each subscore category
-wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 9.8e-6
-wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 1.7e-5
-wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 8.8e=6
+wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 2.46e-10
+wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 5.25e-10
+wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 1.138e-10
+
 
 #pdf('figures/game_scores.pdf', height = 5, width = 7)
 par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
@@ -445,9 +430,9 @@ axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
 mtext("Accuracy", side = 2, line = 3, cex = 2)
 mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
 mtext(c("% Found", "Identification", "Length\nestimation"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
-text(2.3, 25, labels = "p = 9.8e-6") # update
-text(4.5, 35, labels = "p = 1.7e-5") # update
-text(7, 20, labels = "p = 8.8e-6") # update
+text(2.3, 25, labels = "p = 2.46e-10") 
+text(4.9, 25, labels = "p = 5.25e-10") 
+text(7.9, 20, labels = "p = 1.14e-10") 
 
 
 #print(game_scores)
