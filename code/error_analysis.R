@@ -150,9 +150,6 @@ stacked = ggplot(only_error_num, aes(fill = StandardGroupRevised, y = errorRate1
 print(stacked)
 #dev.off()
 
-# TOTAL MISID RATE :
-
-
 
 ######## Plot:"What are certain arthropods typically suspected as?" ##########
 only_error_num$StandardGroupRevised = factor(only_error_num$StandardGroupRevised, 
@@ -188,6 +185,32 @@ print(rev_stacked)
 #pdf('figures/2-panel_misidentifications.pdf', height = 11, width = 7)
 grid.arrange(stacked, rev_stacked, nrow=2)
 #dev.off()
+
+
+# TOTAL MISID RATES
+# a) at what rate were incorrect submissions entered?
+# incorrect submissions / total (original + standard) submissions 
+# total error per original group
+# average rate ?? summary metric or precise rates:
+# (total number of misidentified samples / total samples)
+
+
+# b) at what rate were arthropods incorrectly identified? 
+# total error per standard group 
+
+# do we want to find the SUM of all the error rates per originalgroup / standardgroup?
+# then average that?
+
+
+#### Single rates 
+
+# OriginalGroup misidentification rate 
+global_error_rate1 = mean(only_error_num$errorRate1, na.rm = TRUE)
+print(global_error_rate1)
+
+# StandardGroup misidentification rate
+global_error_rate2 = mean(only_error_num$errorRate2, na.rm = TRUE)
+print(global_error_rate2)
 
 
 
