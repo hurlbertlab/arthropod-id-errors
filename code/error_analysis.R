@@ -150,6 +150,9 @@ stacked = ggplot(only_error_num, aes(fill = StandardGroupRevised, y = errorRate1
 print(stacked)
 #dev.off()
 
+# TOTAL MISID RATE :
+
+
 
 ######## Plot:"What are certain arthropods typically suspected as?" ##########
 only_error_num$StandardGroupRevised = factor(only_error_num$StandardGroupRevised, 
