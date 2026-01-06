@@ -15,16 +15,16 @@ library(RColorBrewer)
 
 # Read in raw data
 
-expert_ID = read.csv("data/2025-06-17_ExpertIdentification.csv")
+expert_ID = read.csv("data/2025-12-12_ExpertIdentification.csv")
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
 
 # Fix two records manually that the user assumed originally were sawfly larvae (but in one case forgot to check the box)
 expert_ID$OriginalGroup[expert_ID$ArthropodSightingFK %in% c(116543,129308)] = 'sawfly larvae'
 
-surveys = read.csv("data/2025-06-17_Survey.csv", quote = '\"', fill = T)
-game = read.csv("data/2025-06-17_VirtualSurveyScore.csv")
-arthro_sight = read.csv("data/2025-06-17_ArthropodSighting.csv")
+surveys = read.csv("data/2025-12-12_Survey.csv", quote = '\"', fill = T)
+game = read.csv("data/2025-12-12_VirtualSurveyScore.csv")
+arthro_sight = read.csv("data/2025-12-12_ArthropodSighting.csv")
 
 
 # Arthropod groups and their revised labels
