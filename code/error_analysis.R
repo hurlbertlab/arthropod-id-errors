@@ -15,7 +15,7 @@ library(RColorBrewer)
 
 # Read in raw data
 
-expert_ID = read.csv("data/2025-12-12_ExpertIdentification.csv")
+expert_ID = read.csv("data/2025-12-12_ExpertIdentification.csv", quote = '\"', fill = TRUE)
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
 
@@ -418,7 +418,8 @@ abline(a=0, b = 1)
 # first quiz score to their survey error rate (use 1st score or best score here)
 
 gameplaydf =  game %>%
-  filter(IdentificationAccuracy != -1) %>%  # Filter out records from before subscores were kept (they are stored as -1)
+  filter(PercentFound > 25,   # Filter records that likely reflect a user that bailed out of the game early
+         IdentificationAccuracy != -1) %>%  # Filter out records from before subscores were kept (they are stored as -1)
   select(UserFK, Score, LengthAccuracy, IdentificationAccuracy, PercentFound) %>%
   group_by(UserFK) %>%
   summarize(userplays = n(), 
@@ -440,16 +441,16 @@ gameplaydf =  game %>%
 #################################################
 
 ## Compare first vs best for each subscore category
-wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 5.33e-13
-wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 3.57e-12
-wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 1.15e-12
+wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 2.46e-12
+wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 1.13e-11
+wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 5.29e-12
 
 ## Compare best subscores across categories
-# ID better than % found, p = 2.43e-5
+# ID better than % found, p = 0.0004
 wilcox.test(gameplaydf$best_pct_found, gameplaydf$best_ID_accuracy, paired = TRUE)     
-# ID better than length, p = 1.94e-9
+# ID better than length, p = 9.67e-11
 wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$best_length_accuracy, paired = TRUE)
-# % found better than length, p = 0.037
+# % found better than length, p = 0.0004
 wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$best_pct_found, paired = TRUE)  
 
 
@@ -469,14 +470,11 @@ text(4.5, -3, labels = "***", cex = 2)
 text(7.5, -3, labels = "***", cex = 2) 
 
 segments(x0= c(2, 2, 4.9), y0 = c(101, 103, 103), x1 = c(2, 4.9, 4.9), y1 = c(103, 103, 101))
-#text(3.5, 106, labels = expression(italic(p) == 2.4e-5), cex = 1.25) 
 text(3.5, 106, "**", cex = 2)
 segments(x0= c(5.1, 5.1, 8), y0 = c(101, 103, 103), x1 = c(5.1, 8, 8), y1 = c(103, 103, 101))
-#text(6.5, 106, labels = expression(italic(p) == 1.9e-9), cex = 1.25) 
-text(6.5, 106, "**", cex = 2)
+text(6.5, 106, "***", cex = 2)
 segments(x0= c(2, 2, 8), y0 = c(108, 110, 110), x1 = c(2, 8, 8), y1 = c(110, 110, 108))
-#text(4.7, 113, labels = expression(italic(p) == 0.037), cex = 1.25) 
-text(4.7, 113, "*", cex = 2)
+text(4.7, 113, "**", cex = 2)
 
 #print(game_scores)
 
