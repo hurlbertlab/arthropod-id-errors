@@ -1,4 +1,3 @@
-library(gsheet)
 library(dplyr)
 library(tidyr)
 library(stringr)
@@ -15,11 +14,9 @@ library(stringr)
 
 
 # Survey results with length estimations
-url = "https://docs.google.com/spreadsheets/d/1j3ZC6ED_yPXXu9ESuRMzKWprlg7U-0xCPn36Fc7wZ_0/edit?resourcekey=&gid=1690406713#gid=1690406713"
+results = read.csv('data/raw_length_estimates.csv', header = T)
 
-results = gsheet2tbl(url)
-
-names(results)[3:9] = c('Group', 'Specimen1_8', 'Specimen2_21', 'Specimen3_6', 
+names(results)[2:8] = c('Group', 'Specimen1_8', 'Specimen2_21', 'Specimen3_6', 
                         'Specimen4_31', 'Specimen5_12', 'Specimen6_19')
 
 results$color = case_when(results$Group == 'A' ~ 'dodgerblue',
@@ -34,8 +31,8 @@ results$symbol = case_when(results$Group == 'A' ~ 17,
 
 # Plotting revised data
 results2 = results
-results2[4, 4:9] = results[4, 4:9]/10
-results2[10, 4:9] = results[10, 4:9]*10
+results2[4, 3:8] = results[4, 3:8]/10
+results2[10, 3:8] = results[10, 3:8]*10
 
 
 long = pivot_longer(results2, cols = Specimen1_8:Specimen6_19, names_to = "Specimen")
@@ -43,21 +40,37 @@ long$trueLength = as.numeric(word(long$Specimen, 2, sep = "_"))
 long$deviation = long$value - long$trueLength
 long$pctdev = 100*long$deviation/long$trueLength
 
+long %>% group_by(Group) %>% summarize(medDev = median(deviation), medPct = median(pctdev))
+
+lengthdata = data.frame(Control_deviation = long$deviation[long$Group == 'A'],
+                         Control_pctdev = long$pctdev[long$Group == 'A'],
+                         Thumb_deviation = c(long$deviation[long$Group == 'B'], rep(NA, 108 - sum(long$Group == 'B'))),
+                         Thumb_pctdev = c(long$pctdev[long$Group == 'B'], rep(NA, 108 - sum(long$Group == 'B'))),
+                         Ruler_deviation = c(long$deviation[long$Group == 'C'], rep(NA, 108 - sum(long$Group == 'C'))),
+                         Ruler_pctdev = c(long$pctdev[long$Group == 'C'], rep(NA, 108 - sum(long$Group == 'C'))))
+
 par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
-boxplot(long$deviation ~ long$Group, xaxt = "n", xlab = "Treatment", ylab = "Deviation (mm)", cex.lab = 1.5, col = c('dodgerblue', 'salmon', 'limegreen'))
+boxplot(lengthdata[, c(1, 3, 5)], xaxt = "n", xlab = "Treatment", ylab = "Deviation (mm)", cex.lab = 1.5, 
+        col = c('dodgerblue', 'salmon', 'limegreen'), las = 1)
 abline(h = 0, lty = 'dashed')
 mtext(c("Control", "Thumb", "Ruler"), 1, at = 1:3, line = 1, cex = 1.3)
-text(2, 32, "Medians:")
-text(1:3, rep(27, 3), c("-4", "-2", "-1"))
+text(2, 32, expression(bold(Medians)))
+text(1:3, rep(27, 3), c("-3", "-1", "-0.5"), cex = 1.2)
 
 
-boxplot(long$pctdev ~ long$Group, xaxt = "n", xlab = "Treatment", ylab = "Deviation (%)", cex.lab = 1.5, col = c('dodgerblue', 'salmon', 'limegreen'))
+boxplot(lengthdata[, c(2, 4, 6)], xaxt = "n", xlab = "Treatment", ylab = "Deviation (%)", cex.lab = 1.5, 
+        col = c('dodgerblue', 'salmon', 'limegreen'), las = 1)
 abline(h = 0, lty = 'dashed')
 mtext(c("Control", "Thumb", "Ruler"), 1, at = 1:3, line = 1, cex = 1.3)
-text(2, 68, "Medians:")
-text(1:3, rep(50, 3), c("-37.5%", "-11.5%", "-3.2%"))
+text(2, 68, expression(bold(Medians)))
+text(1:3, rep(50, 3), c("-33.3%", "-9.4%", "-1.6%"), cex = 1.2)
 
+# Wilcoxon tests
+wilcox.test(lengthdata$Control_deviation, lengthdata$Thumb_deviation, paired = FALSE)
+wilcox.test(lengthdata$Ruler_deviation, lengthdata$Thumb_deviation, paired = FALSE)
+wilcox.test(lengthdata$Control_deviation, lengthdata$Ruler_deviation, paired = FALSE)
 
-# Reorganized file for conducting Wilcoxon tests between treatment groups
+wilcox.test(lengthdata$Control_pctdev, lengthdata$Thumb_pctdev, paired = FALSE)
+wilcox.test(lengthdata$Ruler_pctdev, lengthdata$Thumb_pctdev, paired = FALSE)
+wilcox.test(lengthdata$Control_pctdev, lengthdata$Ruler_pctdev, paired = FALSE)
 
-lengthdata = read.csv('data/length_estimation_errors.csv')
