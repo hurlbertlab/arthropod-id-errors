@@ -49,21 +49,6 @@ lengthdata = data.frame(Control_deviation = long$deviation[long$Group == 'A'],
                          Ruler_deviation = c(long$deviation[long$Group == 'C'], rep(NA, 108 - sum(long$Group == 'C'))),
                          Ruler_pctdev = c(long$pctdev[long$Group == 'C'], rep(NA, 108 - sum(long$Group == 'C'))))
 
-par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
-boxplot(lengthdata[, c(1, 3, 5)], xaxt = "n", xlab = "Treatment", ylab = "Deviation (mm)", cex.lab = 1.5, 
-        col = c('dodgerblue', 'salmon', 'limegreen'), las = 1)
-abline(h = 0, lty = 'dashed')
-mtext(c("Control", "Thumb", "Ruler"), 1, at = 1:3, line = 1, cex = 1.3)
-text(2, 32, expression(bold(Medians)))
-text(1:3, rep(27, 3), c("-3", "-1", "-0.5"), cex = 1.2)
-
-
-boxplot(lengthdata[, c(2, 4, 6)], xaxt = "n", xlab = "Treatment", ylab = "Deviation (%)", cex.lab = 1.5, 
-        col = c('dodgerblue', 'salmon', 'limegreen'), las = 1)
-abline(h = 0, lty = 'dashed')
-mtext(c("Control", "Thumb", "Ruler"), 1, at = 1:3, line = 1, cex = 1.3)
-text(2, 68, expression(bold(Medians)))
-text(1:3, rep(50, 3), c("-33.3%", "-9.4%", "-1.6%"), cex = 1.2)
 
 # Wilcoxon tests
 wilcox.test(lengthdata$Control_deviation, lengthdata$Thumb_deviation, paired = FALSE)
@@ -73,4 +58,29 @@ wilcox.test(lengthdata$Control_deviation, lengthdata$Ruler_deviation, paired = F
 wilcox.test(lengthdata$Control_pctdev, lengthdata$Thumb_pctdev, paired = FALSE)
 wilcox.test(lengthdata$Ruler_pctdev, lengthdata$Thumb_pctdev, paired = FALSE)
 wilcox.test(lengthdata$Control_pctdev, lengthdata$Ruler_pctdev, paired = FALSE)
+
+# Plot
+par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
+boxplot(lengthdata[, c(1, 3, 5)], xaxt = "n", xlab = "Treatment", ylab = "Deviation (mm)", cex.lab = 1.5, 
+        col = c('dodgerblue', 'salmon', 'limegreen'), las = 1, ylim = c(-22, 42))
+abline(h = 0, lty = 'dashed')
+mtext(c("Control", "Thumb", "Ruler"), 1, at = 1:3, line = 1, cex = 1.3)
+segments(x0= c(1, 1, 1.9), y0 = c(34, 36, 36), x1 = c(1, 1.9, 1.9), y1 = c(36, 36, 34))
+text(1.5, 38, "**", cex = 2)
+segments(x0= c(1, 1, 3), y0 = c(38, 40, 40), x1 = c(1, 3, 3), y1 = c(40, 40, 38))
+text(2, 42, "**", cex = 2)
+segments(x0= c(2, 2, 3), y0 = c(18, 20, 20), x1 = c(2, 3, 3), y1 = c(20, 20, 18))
+text(2.55, 22, "p = 0.51", cex = 1.2)
+
+boxplot(lengthdata[, c(2, 4, 6)], xaxt = "n", xlab = "Treatment", ylab = "Deviation (%)", cex.lab = 1.5, 
+        col = c('dodgerblue', 'salmon', 'limegreen'), las = 1, ylim = c(-80, 137))
+abline(h = 0, lty = 'dashed')
+mtext(c("Control", "Thumb", "Ruler"), 1, at = 1:3, line = 1, cex = 1.3)
+segments(x0= c(1, 1, 2), y0 = c(110, 117, 117), x1 = c(1, 2, 2), y1 = c(117, 117, 110))
+text(1.5, 122, "**", cex = 2)
+segments(x0= c(1, 1, 3), y0 = c(122, 129, 129), x1 = c(1, 3, 3), y1 = c(129, 129, 122))
+text(2, 135, "**", cex = 2)
+segments(x0= c(2, 2, 3), y0 = c(50, 57, 57), x1 = c(2, 3, 3), y1 = c(57, 57, 50))
+text(2.5, 64, "p = 0.40", cex = 1.2)
+
 
