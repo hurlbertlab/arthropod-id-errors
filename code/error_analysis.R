@@ -316,14 +316,14 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
   arthSubset = filter(correct_by_length, StandardGroup == arth)
   
   plot(arthSubset$Length, arthSubset$errorRate, xlab = "", las = 1, 
-       ylab = "", cex = log10(arthSubset$nObs)+.2, pch = 16, col = 'gray40',
+       ylab = "", cex = log10(arthSubset$nObs)+.2, pch = 16, col = 'gray60',
        xlim = c(0, arthGroupNames$maxLength[arthGroupNames$originalName == arth]), ylim = c(0, 80))
   
   # Arthropod group title
-  title(arthGroupNames$revisedName[arthGroupNames$originalName == arth], 
+  title(paste(arthGroupNames$revisedName[arthGroupNames$originalName == arth], p_display), 
         line = -1.3, cex.main = 1.7)
   # p-value
-  title(p_display, line = -3, cex.main = 1.3)
+  #title(p_display, line = -3, cex.main = 1.3)
   
   abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
 
@@ -464,7 +464,7 @@ vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_fou
 axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
 mtext("Accuracy", side = 2, line = 3, cex = 2)
 mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
-mtext(c("% Found", "Identification", "Length\naccuracy"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
+mtext(c("% Found", "% Identified", "Length\naccuracy"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
 text(1.5, -3, labels = "***", cex = 2) 
 text(4.5, -3, labels = "***", cex = 2) 
 text(7.5, -3, labels = "***", cex = 2) 
