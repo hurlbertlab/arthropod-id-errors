@@ -418,31 +418,39 @@ abline(a=0, b = 1)
 # first quiz score to their survey error rate (use 1st score or best score here)
 
 gameplaydf =  game %>%
+  filter(IdentificationAccuracy != -1) %>%  # Filter out records from before subscores were kept (they are stored as -1)
   select(UserFK, Score, LengthAccuracy, IdentificationAccuracy, PercentFound) %>%
   group_by(UserFK) %>%
   summarize(userplays = n(), 
             maxscore = max(Score, na.rm = TRUE),
             first = Score[1], 
             max = max(Score, na.rm = TRUE),
-            best_length_accuracy = max(LengthAccuracy[LengthAccuracy != -1], na.rm = TRUE),
-            best_ID_accuracy = max(IdentificationAccuracy[IdentificationAccuracy != -1], na.rm = TRUE),
-            best_pct_found = max(PercentFound[PercentFound != -1], na.rm = TRUE),
-            first_length_accuracy = LengthAccuracy[LengthAccuracy != -1][1],
-            first_ID_accuracy = IdentificationAccuracy[IdentificationAccuracy != -1][1],
-            first_pct_found = PercentFound[PercentFound != -1][1]) %>%
-  filter(!UserFK %in% c(25, 26)) #remove records from Allen and Aaron
+            best_length_accuracy = max(LengthAccuracy, na.rm = TRUE),
+            best_ID_accuracy = max(IdentificationAccuracy, na.rm = TRUE),
+            best_pct_found = max(PercentFound, na.rm = TRUE),
+            first_length_accuracy = LengthAccuracy[1],
+            first_ID_accuracy = IdentificationAccuracy[1],
+            first_pct_found = PercentFound[1]) %>%
+  filter(!UserFK %in% c(25, 26),   #remove records from Allen and Aaron
+         userplays >= 2)           #users with at least 2 plays 
 
-# Change -Inf values to NA
-gameplaydf[gameplaydf == -Inf | gameplaydf == Inf] = NA
 
 #################################################
 # Figure of distribution of 3 sub game scores 
 #################################################
 
-# Compare first vs best for each subscore category
-wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 2.46e-10
-wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 5.25e-10
-wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 1.138e-10
+## Compare first vs best for each subscore category
+wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 5.33e-13
+wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 3.57e-12
+wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 1.15e-12
+
+## Compare best subscores across categories
+# ID better than % found, p = 2.43e-5
+wilcox.test(gameplaydf$best_pct_found, gameplaydf$best_ID_accuracy, paired = TRUE)     
+# ID better than length, p = 1.94e-9
+wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$best_length_accuracy, paired = TRUE)
+# % found better than length, p = 0.037
+wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$best_pct_found, paired = TRUE)  
 
 
 #pdf('figures/game_scores.pdf', height = 5, width = 7)
@@ -451,15 +459,24 @@ vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_fou
                        'first_ID_accuracy', 'best_ID_accuracy', 
                        'first_length_accuracy', 'best_length_accuracy')],
         col = c('goldenrod', 'goldenrod4', 'firebrick1', 'firebrick', 'turquoise', 'turquoise4'),
-        xaxt = 'n', las = 1, cex.axis = 1.2, at = c(1:2, 4:5, 7:8))
+        xaxt = 'n', las = 1, cex.axis = 1.2, at = c(1:2, 4:5, 7:8), ylim = c(-4, 113))
 axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
 mtext("Accuracy", side = 2, line = 3, cex = 2)
 mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
-mtext(c("% Found", "Identification", "Length\nestimation"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
-text(2.3, 25, labels = "p = 2.46e-10") 
-text(4.9, 25, labels = "p = 5.25e-10") 
-text(7.9, 20, labels = "p = 1.14e-10") 
+mtext(c("% Found", "Identification", "Length\naccuracy"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
+text(1.5, -3, labels = "***", cex = 2) 
+text(4.5, -3, labels = "***", cex = 2) 
+text(7.5, -3, labels = "***", cex = 2) 
 
+segments(x0= c(2, 2, 4.9), y0 = c(101, 103, 103), x1 = c(2, 4.9, 4.9), y1 = c(103, 103, 101))
+#text(3.5, 106, labels = expression(italic(p) == 2.4e-5), cex = 1.25) 
+text(3.5, 106, "**", cex = 2)
+segments(x0= c(5.1, 5.1, 8), y0 = c(101, 103, 103), x1 = c(5.1, 8, 8), y1 = c(103, 103, 101))
+#text(6.5, 106, labels = expression(italic(p) == 1.9e-9), cex = 1.25) 
+text(6.5, 106, "**", cex = 2)
+segments(x0= c(2, 2, 8), y0 = c(108, 110, 110), x1 = c(2, 8, 8), y1 = c(110, 110, 108))
+#text(4.7, 113, labels = expression(italic(p) == 0.037), cex = 1.25) 
+text(4.7, 113, "*", cex = 2)
 
 #print(game_scores)
 
