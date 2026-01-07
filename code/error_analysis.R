@@ -12,6 +12,8 @@ library(lubridate)
 library(vioplot)
 library(ggpubr)
 library(RColorBrewer)
+library(lme4)
+library(jtools) #for effect_plot()
 
 # Read in raw data
 
@@ -340,40 +342,6 @@ mtext("Error rate (%)", 2, cex = 2, outer = TRUE, line = 1.5)
 
 
 
-################ Notable error rates only (distinct/easily ID'd species filtered out)
-
-# Ensure folder exists
-if (!dir.exists("figures")) dir.create("figures")
-
-#pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
-
-# Merge group names and clean
-correct_plot_data <- correct_by_length %>%
-  left_join(arthGroupNames, by = c("StandardGroup" = "originalName")) %>%
-  filter(!is.na(Length), !is.na(errorRate), !is.na(nObs), nObs > 0, StandardGroup %in%
-           c("aphid", "bee", "daddylonglegs", "moths", "truebugs", "grasshopper"))
-         
-
-# Create the plot object
-p <- ggplot(correct_plot_data, aes(x = Length, y = errorRate)) +
-  geom_point(aes(size = log10(nObs) + 0.2), color = "gray40", alpha = 0.7) +
-  xlim(0, 40) +
-  #stat_cor(method = "pearson",
-  #         aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")),
-  #         label.x.npc = "left", label.y.npc = "top", size = 3.5) +
-  geom_hline(yintercept = 10, linetype = "dashed", color = "red", linewidth = 1) +
-  facet_wrap(~ revisedName, scales = "free_x") +
-  labs(x = "Length", y = "% Error Rate") +
-  theme_minimal() +
-  theme(strip.text = element_text(size = 10),
-        axis.text = element_text(size = 8),
-        legend.position = "none")
-
-# Print it to the PDF device
-print(p)
-
-# Close the device
-#dev.off()
 
 
 
@@ -476,9 +444,117 @@ text(6.5, 106, "***", cex = 2)
 segments(x0= c(2, 2, 8), y0 = c(108, 110, 110), x1 = c(2, 8, 8), y1 = c(110, 110, 108))
 text(4.7, 113, "**", cex = 2)
 
-#print(game_scores)
-
 #dev.off()
+
+
+
+####################################################
+# Identification error rate over time
+####################################################
+
+# Create dataframe that has the cumulative number of surveys and photos, and 
+# cumulative error rate by user.
+# Here we exclude observations submitted as caterpillars, spiders, or ants which
+# are known to have extremely low error rates.
+# Error rate is the percent of observations that were incorrectly submitted 
+# (i.e., the percent of observations submitted as Group X that were not actually Group X).
+
+df = left_join(surveys, arthro_sight, by = c('ID' = 'SurveyFK')) %>%
+  rename(ArthropodSightingFK = ID.y) %>%
+  left_join(expertIDs, by = c("ArthropodSightingFK", "OriginalGroup")) %>%
+  rename(SurveyID = ID.x) %>%            
+  dplyr::select(SurveyID, UserFKOfObserver, ArthropodSightingFK, OriginalGroup, Length, StandardGroup) %>%
+  arrange(SurveyID) %>%
+  group_by(UserFKOfObserver) %>%
+  mutate(userSurveyNumber = row_number(),
+         agreement = StandardGroup == OriginalGroup,
+         incorrect = ifelse(agreement, 0, 1)) %>%
+  filter(!OriginalGroup %in% c("unidentified", "other", "caterpillar", "spider", "ant"), 
+         !is.na(StandardGroup)) %>%
+  mutate(photoObsNum = row_number(), 
+         cumNumCorrect = cumsum(agreement),
+         cumErrorRate = 100*(photoObsNum - cumNumCorrect)/photoObsNum) %>%
+  arrange(UserFKOfObserver, SurveyID)
+
+userTotals = df %>%
+  group_by(UserFKOfObserver) %>%
+  summarize(totalSurveys = max(userSurveyNumber),
+            totalPhotos = max(photoObsNum)) %>%
+  arrange(desc(totalPhotos))
+
+# GLM modelling incorrect id as a function of num cumulative photos submitted at the time of the id
+
+# Add any userIDs to be excluded from analysis. For now just excluding AHH (#26).
+df.glm = df %>%
+  filter(UserFKOfObserver != 26, 
+         UserFKOfObserver %in% userTotals$UserFKOfObserver[userTotals$totalPhotos >= 20])
+
+# Random intercepts for UserID
+error.glm = glmer(incorrect ~ scale(photoObsNum) + (1 | UserFKOfObserver), 
+                  data = df.glm, family = "binomial",
+                  glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 100000)))
+
+# p = 0.0004 for photoObsNum
+error.plot = effect_plot(error.glm, pred = photoObsNum, interval = TRUE, int.type = "confidence", 
+                         x.label = "Cumulative number of photo observations", y.label = "Error rate")
+
+error.plot + theme(axis.text.x = element_text(size = 18),
+                   axis.text.y = element_text(size = 18),
+                   axis.title.x = element_text(size = 20),
+                   axis.title.y = element_text(size = 20))
+
+
+# Visualizing individual user examples
+# Function for making an error over time (vs. number of surveys) plot
+errorsOverTimePlot = function(UserID, dataframe = df, new = TRUE, ...) {
+  
+  tmp = filter(dataframe, UserFKOfObserver == UserID)
+  
+  if(new) {
+    plot(tmp$photoObsNum, tmp$cumErrorRate/100, type = 'l', xlab = "Number of surveys", 
+         ylab = "Cumulative error rate", ...)
+  } else {
+    points(tmp$photoObsNum, tmp$cumErrorRate, type = 'l', ...)
+  }
+}
+
+## EXAMPLES:
+
+errorsOverTimePlot(UserID = 3654, dataframe = df, col = 'salmon', new = TRUE, ylim = c(0, 40))
+errorsOverTimePlot(UserID = 2020, dataframe = df, col = 'dodgerblue', new = FALSE)
+
+
+## Multi-panel figure:
+
+# Visualize the top 30 users by totalPhotos
+par(mfrow = c(5, 6), mar = c(5, 3, 1, 1))
+
+# Loop over several different user IDs to create a plot for each one
+for (u in userTotals$UserFKOfObserver[2:31]) { # exclude userID 26, the 1st one
+  
+  errorsOverTimePlot(u, dataframe = df, new = T, main = paste("UserID", u)) 
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+############################
+############################
+###
+###   OLD STUFF
+###
+############################
+############################
+
+
 
 # Calculating survey identification error rates based on the non-easy (caterpillar, ant, spider) bugs
 #  (also excluding other and unidentified)
