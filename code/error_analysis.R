@@ -1,8 +1,8 @@
-# Script for Identifying the types of errors made by citizen scientists in Caterpillars Count!
+## Script for Identifying the types of errors made by citizen scientists in Caterpillars Count!
 
 # Add a new comment
 
-# Load libraries
+## Load libraries
 library(dplyr)
 library(tidyr)
 library(stringr)
@@ -15,8 +15,7 @@ library(RColorBrewer)
 library(lme4)
 library(jtools) #for effect_plot()
 
-# Read in raw data
-
+## Read in raw data
 expert_ID = read.csv("data/2025-12-12_ExpertIdentification.csv", quote = '\"', fill = TRUE)
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
@@ -40,6 +39,94 @@ arthGroupNames = data.frame(originalName = arthGroupsWeWant,
                                             "grasshoppers", "leafhoppers", "moths",
                                             "spiders", "true bugs", "sawfly larvae"),
                             maxLength = c(15, 10, 22, 30, 60, 15, 25, 40, 25, 25, 22, 35, 50))
+
+
+#########################################################################
+# Virtual Survey Game Data Analysis 
+###########################################################################
+
+# For each user that has played the game at least twice, we want the 1st score and max/"best" score 
+# for all 3 subscores (lengths, percentfound, IDaccuracy)
+
+gameplaydf =  game %>%
+  filter(PercentFound > 25,   # Filter records that likely reflect a user that bailed out of the game early
+         IdentificationAccuracy != -1) %>%  # Filter out records from before subscores were kept (which are stored as -1)
+  select(UserFK, Score, LengthAccuracy, IdentificationAccuracy, PercentFound) %>%
+  group_by(UserFK) %>%
+  summarize(userplays = n(), 
+            maxscore = max(Score, na.rm = TRUE),
+            first = Score[1], 
+            max = max(Score, na.rm = TRUE),
+            best_length_accuracy = max(LengthAccuracy, na.rm = TRUE),
+            best_ID_accuracy = max(IdentificationAccuracy, na.rm = TRUE),
+            best_pct_found = max(PercentFound, na.rm = TRUE),
+            first_length_accuracy = LengthAccuracy[1],
+            first_ID_accuracy = IdentificationAccuracy[1],
+            first_pct_found = PercentFound[1]) %>%
+  filter(!UserFK %in% c(25, 26),   #remove records from Allen and Aaron (admin testers)
+         userplays >= 2)           #users with at least 2 plays 
+
+
+################################################################
+# Figure 2 - Comparisons of distributions of 3 sub game scores 
+################################################################
+
+## Compare first vs best for each subscore category
+wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 2.46e-12
+wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 1.13e-11
+wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 5.29e-12
+
+## Compare best subscores across categories
+# ID better than % found, p = 0.0004
+wilcox.test(gameplaydf$best_pct_found, gameplaydf$best_ID_accuracy, paired = TRUE)     
+# ID better than length, p = 9.67e-11
+wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$best_length_accuracy, paired = TRUE)
+# % found better than length, p = 0.0004
+wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$best_pct_found, paired = TRUE)  
+
+
+pdf('figures/Figure2_game_scores.pdf', height = 5, width = 7)
+par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
+vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_found', 
+                                                'first_ID_accuracy', 'best_ID_accuracy', 
+                                                'first_length_accuracy', 'best_length_accuracy')],
+        col = c('goldenrod', 'goldenrod4', 'firebrick1', 'firebrick', 'turquoise', 'turquoise4'),
+        xaxt = 'n', las = 1, cex.axis = 1.2, at = c(1:2, 4:5, 7:8), ylim = c(-4, 113))
+axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
+mtext("Accuracy", side = 2, line = 3, cex = 2)
+mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
+mtext(c("% Found", "% Identified", "Length\naccuracy"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
+
+segments(x0= c(1.1, 1.1, 2), y0 = c(2, 0, 0), x1 = c(1.1, 2, 2), y1 = c(0, 0, 2))
+segments(x0= c(4.1, 4.1, 5), y0 = c(2, 0, 0), x1 = c(4.1, 5, 5), y1 = c(0, 0, 2))
+segments(x0= c(7.1, 7.1, 8), y0 = c(2, 0, 0), x1 = c(7.1, 8, 8), y1 = c(0, 0, 2))
+text(1.5, -4, labels = "***", cex = 2) 
+text(4.5, -4, labels = "***", cex = 2) 
+text(7.5, -4, labels = "***", cex = 2) 
+
+segments(x0= c(2, 2, 4.9), y0 = c(101, 103, 103), x1 = c(2, 4.9, 4.9), y1 = c(103, 103, 101))
+text(3.5, 106, "**", cex = 2)
+segments(x0= c(5.1, 5.1, 8), y0 = c(101, 103, 103), x1 = c(5.1, 8, 8), y1 = c(103, 103, 101))
+text(6.5, 106, "***", cex = 2)
+segments(x0= c(2, 2, 8), y0 = c(108, 110, 110), x1 = c(2, 8, 8), y1 = c(110, 110, 108))
+text(4.7, 113, "**", cex = 2)
+
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -189,30 +276,6 @@ grid.arrange(stacked, rev_stacked, nrow=2)
 #dev.off()
 
 
-# TOTAL MISID RATES
-# a) at what rate were incorrect submissions entered?
-# incorrect submissions / total (original + standard) submissions 
-# total error per original group
-# average rate ?? summary metric or precise rates:
-# (total number of misidentified samples / total samples)
-
-
-# b) at what rate were arthropods incorrectly identified? 
-# total error per standard group 
-
-# do we want to find the SUM of all the error rates per originalgroup / standardgroup?
-# then average that?
-
-
-#### Single rates 
-
-# OriginalGroup misidentification rate 
-global_error_rate1 = mean(only_error_num$errorRate1, na.rm = TRUE)
-print(global_error_rate1)
-
-# StandardGroup misidentification rate
-global_error_rate2 = mean(only_error_num$errorRate2, na.rm = TRUE)
-print(global_error_rate2)
 
 
 
@@ -371,80 +434,6 @@ text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"],
 
 abline(a=0, b = 1)
 
-
-#########################################################################
-#
-#       Game Data Analysis 
-#
-##########################################################################
-
-# 1) How good are people at estimating length?
-# filtered to difficult arth groups/out 'easy' groups rather than by individual, because error rate by individual might be skewed due to 'easy' arths
-
-# for each user, we want the 1st score, avg score, max/"best" score, for all 4 scores (lengths, percentfound, IDaccuracy)
-
-# first quiz score to their survey error rate (use 1st score or best score here)
-
-gameplaydf =  game %>%
-  filter(PercentFound > 25,   # Filter records that likely reflect a user that bailed out of the game early
-         IdentificationAccuracy != -1) %>%  # Filter out records from before subscores were kept (they are stored as -1)
-  select(UserFK, Score, LengthAccuracy, IdentificationAccuracy, PercentFound) %>%
-  group_by(UserFK) %>%
-  summarize(userplays = n(), 
-            maxscore = max(Score, na.rm = TRUE),
-            first = Score[1], 
-            max = max(Score, na.rm = TRUE),
-            best_length_accuracy = max(LengthAccuracy, na.rm = TRUE),
-            best_ID_accuracy = max(IdentificationAccuracy, na.rm = TRUE),
-            best_pct_found = max(PercentFound, na.rm = TRUE),
-            first_length_accuracy = LengthAccuracy[1],
-            first_ID_accuracy = IdentificationAccuracy[1],
-            first_pct_found = PercentFound[1]) %>%
-  filter(!UserFK %in% c(25, 26),   #remove records from Allen and Aaron
-         userplays >= 2)           #users with at least 2 plays 
-
-
-#################################################
-# Figure of distribution of 3 sub game scores 
-#################################################
-
-## Compare first vs best for each subscore category
-wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 2.46e-12
-wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$first_ID_accuracy, paired = TRUE) # p = 1.13e-11
-wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$first_length_accuracy, paired = TRUE) # p = 5.29e-12
-
-## Compare best subscores across categories
-# ID better than % found, p = 0.0004
-wilcox.test(gameplaydf$best_pct_found, gameplaydf$best_ID_accuracy, paired = TRUE)     
-# ID better than length, p = 9.67e-11
-wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$best_length_accuracy, paired = TRUE)
-# % found better than length, p = 0.0004
-wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$best_pct_found, paired = TRUE)  
-
-
-#pdf('figures/game_scores.pdf', height = 5, width = 7)
-par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
-vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_found', 
-                       'first_ID_accuracy', 'best_ID_accuracy', 
-                       'first_length_accuracy', 'best_length_accuracy')],
-        col = c('goldenrod', 'goldenrod4', 'firebrick1', 'firebrick', 'turquoise', 'turquoise4'),
-        xaxt = 'n', las = 1, cex.axis = 1.2, at = c(1:2, 4:5, 7:8), ylim = c(-4, 113))
-axis(1, at = c(1:2, 4:5, 7:8), tck = -0.01, labels = F)
-mtext("Accuracy", side = 2, line = 3, cex = 2)
-mtext(rep(c("First", "Best"), times = 3), 1, at = c(1:2, 4:5, 7:8), cex = 1.25, line = .5)
-mtext(c("% Found", "% Identified", "Length\naccuracy"), 1, at = c(1.5, 4.5, 7.5), , cex = 1.8, padj = .5, line = 3, col = c('goldenrod4', 'firebrick', 'turquoise4'))
-text(1.5, -3, labels = "***", cex = 2) 
-text(4.5, -3, labels = "***", cex = 2) 
-text(7.5, -3, labels = "***", cex = 2) 
-
-segments(x0= c(2, 2, 4.9), y0 = c(101, 103, 103), x1 = c(2, 4.9, 4.9), y1 = c(103, 103, 101))
-text(3.5, 106, "**", cex = 2)
-segments(x0= c(5.1, 5.1, 8), y0 = c(101, 103, 103), x1 = c(5.1, 8, 8), y1 = c(103, 103, 101))
-text(6.5, 106, "***", cex = 2)
-segments(x0= c(2, 2, 8), y0 = c(108, 110, 110), x1 = c(2, 8, 8), y1 = c(110, 110, 108))
-text(4.7, 113, "**", cex = 2)
-
-#dev.off()
 
 
 
