@@ -222,7 +222,7 @@ stacked = ggplot(only_error_num, aes(fill = StandardGroupRevised, y = errorRate1
    scale_y_continuous(breaks = seq(0, 40, by = 5)) +
    labs(
      x = "Originally Reported As...",
-     y = "% Error Rate",
+     y = "False Positive %",
      fill = "Actual Group"
    ) +
    theme_bw() +
@@ -232,13 +232,12 @@ stacked = ggplot(only_error_num, aes(fill = StandardGroupRevised, y = errorRate1
      axis.title = element_text(size = 16),
      axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
      axis.text.y = element_text(size = 14),
-     plot.margin = unit(c(0.1, .5, .2, .5), "cm")
-   )
-
-#pdf('figures/misidentified1.pdf', height = 5, width = 7)
-print(stacked)
-#dev.off()
-
+     plot.margin = unit(c(.1, .5, .2, .5), "cm"),
+     legend.box.margin = margin(t = 30),
+     legend.margin = margin(t = 35)
+   ) +
+  labs(tag = "(a)") +
+  theme(plot.tag = element_text(size = 20))
 
 ######## Plot:"What are certain arthropods typically suspected as?" ##########
 only_error_num$StandardGroupRevised = factor(only_error_num$StandardGroupRevised, 
@@ -251,10 +250,10 @@ rev_stacked = ggplot(only_error_num[only_error_num$StandardGroup2 != "other",],
   scale_fill_manual(
     values = color_values,
     breaks = sort(names(color_values)),  
-    name = "Arthropod Group") +
+    name = "Reported As") +
   scale_y_continuous(breaks = seq(0, 60, by = 10)) +
-  labs(x = "Actual Group", 
-       y = "% Error Rate", 
+  labs(x = "Arthropod Group", 
+       y = "False Negative %", 
        #title = "Most Common Misidentifications", 
        fill = "Reported As") +
   theme_bw() + 
@@ -265,15 +264,16 @@ rev_stacked = ggplot(only_error_num[only_error_num$StandardGroup2 != "other",],
         axis.title = element_text(size = 16),
         axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
         axis.text.y = element_text(size = 14)) +
-  theme(plot.margin = unit(c(0,.5,.2,.5), "cm"))
+  theme(plot.margin = unit(c(.1,.5,.2,.5), "cm"),
+        legend.box.margin = margin(t = 20),
+        legend.margin = margin(t = 20)) +
+  labs(tag = "(b)") +
+  theme(plot.tag = element_text(size = 20))
 
-#pdf('figures/misidentified2.pdf', height = 5, width = 7)
-print(rev_stacked)
-#dev.off()
 
-#pdf('figures/2-panel_misidentifications.pdf', height = 11, width = 7)
+pdf('figures/Figure3_misidentifications.pdf', height = 9, width = 7)
 grid.arrange(stacked, rev_stacked, nrow=2)
-#dev.off()
+dev.off()
 
 
 
