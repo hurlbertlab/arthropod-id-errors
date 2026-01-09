@@ -14,6 +14,7 @@ library(ggpubr)
 library(RColorBrewer)
 library(lme4)
 library(jtools) #for effect_plot()
+library(scales)
 
 ## Read in raw data
 expert_ID = read.csv("data/2025-12-12_ExpertIdentification.csv", quote = '\"', fill = TRUE)
@@ -301,7 +302,7 @@ length_estimates = data.frame(StandardGroup = NULL,
                               length_estimate = NULL,
                               p = NULL)
 
-#pdf('figures/error_rates_vs_length.pdf', height = 8, width = 10)
+pdf('figures/Figure4_error_rates_vs_length.pdf', height = 6, width = 8)
 
 par(mfrow = c(3,3), mar=c(2.5,4,1,1), oma = c(4, 4, 1, 1), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
@@ -322,23 +323,12 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
                       length_estimate = summary(tmp.glm)$coefficients[2, 1],
                       p = summary(tmp.glm)$coefficients[2, 4])
   
-  #tmp.plot = effect_plot(tmp.glm, pred = Length, interval = TRUE, int.type = 'confidence', 
-   #                      y.label = 'Error rate', x.label = 'Length (mm)',
-   #                      main.title = arth)
-  
-  #assign(paste0(arth, '.plot'), tmp.plot)
-  
   length_estimates = rbind(length_estimates, tmp.df)
-
-
 
   p_display = case_when(tmp.df$p < .0001 ~ '***',
                         tmp.df$p < .001 ~ '**',
                         round(tmp.df$p,2) <= .01 ~ '*',
                         .default = '')
-  #p_display = if_else(round(tmp.df$p,2) <= .01, paste("p =", signif(tmp.df$p, 2)), '')
-  
-
   # Plot panel
   
   arthSubset = filter(correct_by_length, StandardGroup == arth)
@@ -351,51 +341,16 @@ for (arth in c("truebugs", "leafhopper", "bee", "moths", "beetle",
   title(paste(arthGroupNames$revisedName[arthGroupNames$originalName == arth], p_display), 
         line = -1.3, cex.main = 1.7)
   # p-value
-  #title(p_display, line = -3, cex.main = 1.3)
-  
+
   abline(h = 10, col = 'red', lty = 'dashed', lwd = 2)
 
 }
 
 mtext("Length (mm)", 1, cex = 2, outer = TRUE, line = 2)
-mtext("Error rate (%)", 2, cex = 2, outer = TRUE, line = 1.5)
+mtext("False negative %", 2, cex = 2, outer = TRUE, line = 1.5)
 
+dev.off()
 
-# Alternate ggplot2 plotting of responses using effect_plot()
-# ggarrange(truebugs.plot, leafhopper.plot, bee.plot, moths.plot, beetle.plot,
-#           grasshopper.plot, fly.plot, daddylonglegs.plot, aphid.plot,
-#           ncol = 3, nrow = 3)
-
-
-
-
-
-
-######################################################################
-#
-#      Beat sheet / Visual Survey Accuracy Comparison 
-#
-#################################################################
-
-# 1
-# join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
-
-errorsByMethod = expert_ID %>%
-  left_join(arthro_sight[, c("ID", "SurveyFK")], c("ArthropodSightingFK" = "ID")) %>%
-  left_join(surveys[, c("ID", "ObservationMethod")], c("SurveyFK" = "ID")) %>% 
-  filter(!OriginalGroup %in% c("other", "unidentified")) %>%
-  group_by(ObservationMethod, OriginalGroup) %>%
-  summarize(nTot = n(),
-            numIncorrect = sum(OriginalGroup != StandardGroup),
-            errorRate = 100*numIncorrect/nTot)
-
-par(mfrow = c(1,1), mar = c(4, 4, 1, 1))
-
-bsvplot = plot(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], xlab = "Beat Sheet", ylab = "Visual", main = "", errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], cex = log10 ((errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Beat sheet"] + errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Visual"])/2), pch = 16, col = 'salmon')
-
-text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], errorsByMethod$OriginalGroup[errorsByMethod$ObservationMethod == "Visual"], cex = 0.7)
-
-abline(a=0, b = 1)
 
 
 
@@ -413,7 +368,7 @@ abline(a=0, b = 1)
 
 df = left_join(surveys, arthro_sight, by = c('ID' = 'SurveyFK')) %>%
   rename(ArthropodSightingFK = ID.y) %>%
-  left_join(expertIDs, by = c("ArthropodSightingFK", "OriginalGroup")) %>%
+  left_join(expert_ID, by = c("ArthropodSightingFK", "OriginalGroup")) %>%
   rename(SurveyID = ID.x) %>%            
   dplyr::select(SurveyID, UserFKOfObserver, ArthropodSightingFK, OriginalGroup, Length, StandardGroup) %>%
   arrange(SurveyID) %>%
@@ -448,13 +403,20 @@ error.glm = glmer(incorrect ~ scale(photoObsNum) + (1 | UserFKOfObserver),
 
 # p = 0.0004 for photoObsNum
 error.plot = effect_plot(error.glm, pred = photoObsNum, interval = TRUE, int.type = "confidence", 
-                         x.label = "Cumulative number of photo observations", y.label = "Error rate")
+                         x.label = "Cumulative number of photos", y.label = "False negative %") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) + 
+  theme_classic(base_size = 18) +
+  theme(axis.text.x = element_text(size = 18),
+        axis.text.y = element_text(size = 18),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
+        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 18))
 
-error.plot + theme(axis.text.x = element_text(size = 18),
-                   axis.text.y = element_text(size = 18),
-                   axis.title.x = element_text(size = 20),
-                   axis.title.y = element_text(size = 20))
-
+pdf('figures/Figure5_errors_over_time.pdf', height = 5, width = 7)
+error.plot 
+dev.off()
 
 # Visualizing individual user examples
 # Function for making an error over time (vs. number of surveys) plot
@@ -583,6 +545,33 @@ dev.off()
 
 
 
+
+
+######################################################################
+#
+#      Beat sheet / Visual Survey Accuracy Comparison 
+#
+#################################################################
+
+# 1
+# join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
+
+errorsByMethod = expert_ID %>%
+  left_join(arthro_sight[, c("ID", "SurveyFK")], c("ArthropodSightingFK" = "ID")) %>%
+  left_join(surveys[, c("ID", "ObservationMethod")], c("SurveyFK" = "ID")) %>% 
+  filter(!OriginalGroup %in% c("other", "unidentified")) %>%
+  group_by(ObservationMethod, OriginalGroup) %>%
+  summarize(nTot = n(),
+            numIncorrect = sum(OriginalGroup != StandardGroup),
+            errorRate = 100*numIncorrect/nTot)
+
+par(mfrow = c(1,1), mar = c(4, 4, 1, 1))
+
+bsvplot = plot(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], xlab = "Beat Sheet", ylab = "Visual", main = "", errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], cex = log10 ((errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Beat sheet"] + errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Visual"])/2), pch = 16, col = 'salmon')
+
+text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], errorsByMethod$OriginalGroup[errorsByMethod$ObservationMethod == "Visual"], cex = 0.7)
+
+abline(a=0, b = 1)
 
 
 
