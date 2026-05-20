@@ -233,7 +233,7 @@ stacked = ggplot(only_error_num, aes(fill = StandardGroupRevised, y = errorRate1
      axis.title = element_text(size = 16),
      axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
      axis.text.y = element_text(size = 14),
-     plot.margin = unit(c(.1, .5, .2, .5), "cm"),
+     plot.margin = unit(c(.3, .5, .2, .5), "cm"),
      legend.box.margin = margin(t = 30),
      legend.margin = margin(t = 35)
    ) +
@@ -265,7 +265,7 @@ rev_stacked = ggplot(only_error_num[only_error_num$StandardGroup2 != "other",],
         axis.title = element_text(size = 16),
         axis.text.x = element_text(size = 14, angle = 45, hjust = 1, vjust = 1),
         axis.text.y = element_text(size = 14)) +
-  theme(plot.margin = unit(c(.1,.5,.2,.5), "cm"),
+  theme(plot.margin = unit(c(.1,.5,.4,.5), "cm"),
         legend.box.margin = margin(t = 20),
         legend.margin = margin(t = 20)) +
   labs(tag = "(b)") +
@@ -273,7 +273,13 @@ rev_stacked = ggplot(only_error_num[only_error_num$StandardGroup2 != "other",],
 
 
 pdf('figures/Figure3_misidentifications.pdf', height = 9, width = 7)
-grid.arrange(stacked, rev_stacked, nrow=2)
+grid.arrange(
+  stacked,
+  grid::nullGrob(),   # spacer - modify the 0.05 value below in heights c()
+  rev_stacked,
+  nrow = 3,
+  heights = c(1, 0.05, 1)
+)
 dev.off()
 
 
