@@ -69,7 +69,12 @@ gameplaydf =  game %>%
 
 
 ################################################################
-# Figure 2 - Comparisons of distributions of 3 sub game scores 
+# Figure 2 - Example survey photos
+################################################################
+
+
+################################################################
+# Figure 3 - Comparisons of distributions of 3 sub game scores 
 ################################################################
 
 ## Compare first vs best for each subscore category
@@ -86,7 +91,7 @@ wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$best_length_accuracy, paired
 wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$best_pct_found, paired = TRUE)  
 
 
-pdf('figures/Figure2_game_scores.pdf', height = 5, width = 7)
+pdf('figures/Figure3_game_scores.pdf', height = 5, width = 7)
 par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
 vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_found', 
                                                 'first_ID_accuracy', 'best_ID_accuracy', 
@@ -272,7 +277,7 @@ rev_stacked = ggplot(only_error_num[only_error_num$StandardGroup2 != "other",],
   theme(plot.tag = element_text(size = 20))
 
 
-pdf('figures/Figure3_misidentifications.pdf', height = 9, width = 7)
+pdf('figures/Figure4_misidentifications.pdf', height = 9, width = 7)
 grid.arrange(
   stacked,
   grid::nullGrob(),   # spacer - modify the 0.05 value below in heights c()
@@ -308,7 +313,7 @@ length_estimates = data.frame(StandardGroup = NULL,
                               length_estimate = NULL,
                               p = NULL)
 
-pdf('figures/Figure4_error_rates_vs_length.pdf', height = 6, width = 8)
+pdf('figures/Figure5_error_rates_vs_length.pdf', height = 6, width = 8)
 
 par(mfrow = c(3,3), mar=c(2.5,4,1,1), oma = c(4, 4, 1, 1), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
@@ -408,19 +413,69 @@ error.glm = glmer(incorrect ~ scale(photoObsNum) + (1 | UserFKOfObserver),
                   glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 100000)))
 
 # p = 0.0004 for photoObsNum
-error.plot = effect_plot(error.glm, pred = photoObsNum, interval = TRUE, int.type = "confidence", 
-                         x.label = "Cumulative number of photos", y.label = "False negative %") +
-  scale_y_continuous(labels = percent_format(accuracy = 1)) + 
+error.plot = effect_plot(
+  error.glm,
+  pred = photoObsNum,
+  interval = TRUE,
+  int.type = "confidence",
+  x.label = "Cumulative number of photos",
+  y.label = "False negative %"
+) +
+  scale_x_continuous(
+    breaks = seq(0, 700, by = 50)   # adjust max as needed
+  ) +
+  scale_y_continuous(
+    breaks = c(.04, .08, .12, .16),
+    minor_breaks = seq(0, .16, by = .02),
+    labels = scales::percent_format(accuracy = 1)
+  ) +
   theme_classic(base_size = 18) +
-  theme(axis.text.x = element_text(size = 18),
-        axis.text.y = element_text(size = 18),
-        axis.title.x = element_text(size = 20),
-        axis.title.y = element_text(size = 20),
-        panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
-        axis.title = element_text(size = 20),
-        axis.text = element_text(size = 18))
+  theme(
+    axis.text.x = element_text(size = 18),
+    axis.text.y = element_text(size = 18),
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    axis.text = element_text(size = 18),
+    panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+    # add gridlines
+    panel.grid.major = element_line(colour = "grey80", linewidth = 0.5),
+    panel.grid.minor = element_line(colour = "grey90", linewidth = 0.3)
+  )
+error.plot
+error.plot = effect_plot(
+  error.glm,
+  pred = photoObsNum,
+  interval = TRUE,
+  int.type = "confidence",
+  x.label = "Cumulative number of photos",
+  y.label = "False negative %"
+) +
+  scale_x_continuous(
+    breaks = seq(0, 700, by = 100),
+    minor_breaks = seq(0, 700, by = 50),
+  ) +
+  scale_y_continuous(
+    breaks = c(.04, .08, .12, .16),
+    minor_breaks = seq(0, .16, by = .02),
+    labels = scales::percent_format(accuracy = 1)
+  ) +
+  theme_classic(base_size = 18) +
+  theme(
+    axis.text.x = element_text(size = 18),
+    axis.text.y = element_text(size = 18),
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    axis.text = element_text(size = 18),
+    panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
+    # add gridlines
+    panel.grid.major = element_line(colour = "grey80", linewidth = 0.3),
+    panel.grid.minor = element_line(colour = "grey90", linewidth = 0.2)
+  )
 
-pdf('figures/Figure5_errors_over_time.pdf', height = 5, width = 7)
+
+pdf('figures/Figure6_errors_over_time.pdf', height = 5, width = 7)
 error.plot 
 dev.off()
 
@@ -519,7 +574,7 @@ wilcox.test(lengthdata$Ruler_pctdev, lengthdata$Thumb_pctdev, paired = FALSE)
 wilcox.test(lengthdata$Control_pctdev, lengthdata$Ruler_pctdev, paired = FALSE)
 
 # Plot
-pdf('figures/Figure6_length_accuracy.pdf', height = 4.5, width = 8)
+pdf('figures/Figure7_length_accuracy.pdf', height = 4.5, width = 8)
 par(mfrow = c(1, 2), mar = c(5, 5, 1, 1), oma = c(0, 0, 1.3, 0))
 boxplot(lengthdata[, c(1, 3, 5)], xaxt = "n", xlab = "Treatment", ylab = "Deviation (mm)", cex.lab = 1.5, 
         col = c('dodgerblue', 'salmon', 'limegreen'), las = 1, ylim = c(-22, 42))
