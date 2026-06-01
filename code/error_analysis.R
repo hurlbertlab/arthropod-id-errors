@@ -1,22 +1,18 @@
 ## Script for Identifying the types of errors made by citizen scientists in Caterpillars Count!
 
-# Add a new comment
-
 ## Load libraries
 library(dplyr)
-library(tidyr)
-library(stringr)
+library(vioplot)
+library(RColorBrewer)
 library(ggplot2)
 library(gridExtra)
-library(lubridate)
-library(vioplot)
-library(ggpubr)
-library(RColorBrewer)
 library(lme4)
 library(jtools) #for effect_plot()
-library(scales)
+library(tidyr)
+library(stringr)
 
-## Read in raw data
+
+## Read in raw data through 2025
 expert_ID = read.csv("data/2025-12-12_ExpertIdentification.csv", quote = '\"', fill = TRUE)
 expert_ID$OriginalGroup[expert_ID$SawflyUpdated == 1 & expert_ID$OriginalGroup == 'bee'] = 'sawfly larvae'
 expert_ID$StandardGroup[expert_ID$SawflyUpdated == 1] = 'sawfly larvae'
@@ -68,14 +64,12 @@ gameplaydf =  game %>%
          userplays >= 2)           #users with at least 2 plays 
 
 
-################################################################
-# Figure 2 - Example survey photos
-################################################################
-
-
-################################################################
+#########################################################################
 # Figure 3 - Comparisons of distributions of 3 sub game scores 
-################################################################
+#
+#   (Fig1 shows virtual survey game screenshots, Fig2 shows example photos)
+#
+#########################################################################
 
 ## Compare first vs best for each subscore category
 wilcox.test(gameplaydf$best_pct_found, gameplaydf$first_pct_found, paired = TRUE)     # p = 2.46e-12
@@ -121,20 +115,11 @@ dev.off()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#######################################################################
+#
+#    Arthropod Mis-identification Analysis: On-Site / Field Data
+#
+#######################################################################
 
 # total_OG_obs is the total number of observations submitted as a given group,
 # and will be used as the denominator for calculating error rates for the
@@ -164,12 +149,6 @@ error_num = expert_ID %>%
   arrange(OriginalGroup, desc(errorRate1)) 
 
 
-#######################################################################
-#
-#    Arthropod Mis-identification Analysis: On-Site / Field Data
-#
-######################################################################
-
 ####### Plot: Stacked bar graph: "What Arthropods are Mistaken For" #######
 
 only_error_num = error_num %>%
@@ -188,6 +167,7 @@ order1 = only_error_num %>%
   summarize(totalError1 = sum(errorRate1, na.rm = T)) %>%
   arrange(desc(totalError1))
 
+# Order groups according to descending summed errorRate2
 order2 = only_error_num %>%
   group_by(StandardGroupRevised) %>%
   summarize(totalError2 = sum(errorRate2, na.rm = T)) %>%
@@ -200,7 +180,7 @@ only_error_num$OriginalGroupRevised = factor(only_error_num$OriginalGroupRevised
 only_error_num$StandardGroupRevised = factor(only_error_num$StandardGroupRevised, 
                                              levels = order2$StandardGroupRevised)
 
-# Revise colors?
+# Revise colors
 colors = brewer.pal(12, "Paired")
 
 color_values = c(
@@ -290,7 +270,9 @@ dev.off()
 
 
 ##############################################################
-## Length vs % Error per arthropod #############
+#
+# Error rate as a function of arthropod length
+#
 ##############################################################
 
 correctness_table = left_join(expert_ID, arthro_sight, by = c("ArthropodSightingFK" = "ID", "OriginalGroup")) %>% 
@@ -367,7 +349,9 @@ dev.off()
 
 
 ####################################################
+#
 # Identification error rate over time
+#
 ####################################################
 
 # Create dataframe that has the cumulative number of surveys and photos, and 
@@ -422,36 +406,6 @@ error.plot = effect_plot(
   y.label = "False negative %"
 ) +
   scale_x_continuous(
-    breaks = seq(0, 700, by = 50)   # adjust max as needed
-  ) +
-  scale_y_continuous(
-    breaks = c(.04, .08, .12, .16),
-    minor_breaks = seq(0, .16, by = .02),
-    labels = scales::percent_format(accuracy = 1)
-  ) +
-  theme_classic(base_size = 18) +
-  theme(
-    axis.text.x = element_text(size = 18),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(size = 20),
-    axis.title.y = element_text(size = 20),
-    axis.title = element_text(size = 20),
-    axis.text = element_text(size = 18),
-    panel.border = element_rect(fill = NA, colour = "black", linewidth = 1),
-    # add gridlines
-    panel.grid.major = element_line(colour = "grey80", linewidth = 0.5),
-    panel.grid.minor = element_line(colour = "grey90", linewidth = 0.3)
-  )
-error.plot
-error.plot = effect_plot(
-  error.glm,
-  pred = photoObsNum,
-  interval = TRUE,
-  int.type = "confidence",
-  x.label = "Cumulative number of photos",
-  y.label = "False negative %"
-) +
-  scale_x_continuous(
     breaks = seq(0, 700, by = 100),
     minor_breaks = seq(0, 700, by = 50),
   ) +
@@ -479,43 +433,13 @@ pdf('figures/Figure6_errors_over_time.pdf', height = 5, width = 7)
 error.plot 
 dev.off()
 
-# Visualizing individual user examples
-# Function for making an error over time (vs. number of surveys) plot
-errorsOverTimePlot = function(UserID, dataframe = df, new = TRUE, ...) {
-  
-  tmp = filter(dataframe, UserFKOfObserver == UserID)
-  
-  if(new) {
-    plot(tmp$photoObsNum, tmp$cumErrorRate/100, type = 'l', xlab = "Number of surveys", 
-         ylab = "Cumulative error rate", ...)
-  } else {
-    points(tmp$photoObsNum, tmp$cumErrorRate, type = 'l', ...)
-  }
-}
-
-## EXAMPLES:
-
-errorsOverTimePlot(UserID = 3654, dataframe = df, col = 'salmon', new = TRUE, ylim = c(0, 40))
-errorsOverTimePlot(UserID = 2020, dataframe = df, col = 'dodgerblue', new = FALSE)
 
 
-## Multi-panel figure:
-
-# Visualize the top 30 users by totalPhotos
-par(mfrow = c(5, 6), mar = c(5, 3, 1, 1))
-
-# Loop over several different user IDs to create a plot for each one
-for (u in userTotals$UserFKOfObserver[2:31]) { # exclude userID 26, the 1st one
-  
-  errorsOverTimePlot(u, dataframe = df, new = T, main = paste("UserID", u)) 
-  
-}
-
-
-
-############################
-# Length accuracy
-############################
+##########################################
+#
+# Length estimation accuracy
+#
+##########################################
 # Students were asked to measure the length of 6 arthropod specimens.
 
 # Students were assigned to one of 3 treatments:
@@ -554,6 +478,7 @@ long$trueLength = as.numeric(word(long$Specimen, 2, sep = "_"))
 long$deviation = long$value - long$trueLength
 long$pctdev = 100*long$deviation/long$trueLength
 
+# Median deviations by treatment group
 long %>% group_by(Group) %>% summarize(medDev = median(deviation), medPct = median(pctdev))
 
 lengthdata = data.frame(Control_deviation = long$deviation[long$Group == 'A'],
@@ -601,39 +526,3 @@ text(2, 135, "**", cex = 2)
 segments(x0= c(2, 2, 3), y0 = c(50, 57, 57), x1 = c(2, 3, 3), y1 = c(57, 57, 50))
 text(2.5, 67, expression(italic(p) == "0.40"), cex = 1.2)
 dev.off()
-
-
-
-
-
-
-
-######################################################################
-#
-#      Beat sheet / Visual Survey Accuracy Comparison 
-#
-#################################################################
-
-# 1
-# join expert_ID to arthro_sight to get SurveyFK column, then join to surveys to get ObservationMethod column
-
-errorsByMethod = expert_ID %>%
-  left_join(arthro_sight[, c("ID", "SurveyFK")], c("ArthropodSightingFK" = "ID")) %>%
-  left_join(surveys[, c("ID", "ObservationMethod")], c("SurveyFK" = "ID")) %>% 
-  filter(!OriginalGroup %in% c("other", "unidentified")) %>%
-  group_by(ObservationMethod, OriginalGroup) %>%
-  summarize(nTot = n(),
-            numIncorrect = sum(OriginalGroup != StandardGroup),
-            errorRate = 100*numIncorrect/nTot)
-
-par(mfrow = c(1,1), mar = c(4, 4, 1, 1))
-
-bsvplot = plot(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], xlab = "Beat Sheet", ylab = "Visual", main = "", errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], cex = log10 ((errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Beat sheet"] + errorsByMethod$nTot[errorsByMethod$ObservationMethod == "Visual"])/2), pch = 16, col = 'salmon')
-
-text(errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Beat sheet"], errorsByMethod$errorRate[errorsByMethod$ObservationMethod == "Visual"], errorsByMethod$OriginalGroup[errorsByMethod$ObservationMethod == "Visual"], cex = 0.7)
-
-abline(a=0, b = 1)
-
-
-
-
