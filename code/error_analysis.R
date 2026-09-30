@@ -204,12 +204,12 @@ stacked = ggplot(only_error_num, aes(fill = StandardGroupRevised, y = errorRate1
   scale_fill_manual(
     values = color_values,
     breaks = sort(names(color_values)),  
-    name = "Actual Group") +
+    name = "Actual group") +
    scale_y_continuous(breaks = seq(0, 40, by = 5)) +
    labs(
-     x = "Originally Reported As...",
-     y = "False Positive %",
-     fill = "Actual Group"
+     x = "Originally reported as...",
+     y = "False positive %",
+     fill = "Actual group"
    ) +
    theme_bw() +
    theme(
@@ -236,12 +236,12 @@ rev_stacked = ggplot(only_error_num[only_error_num$StandardGroup2 != "other",],
   scale_fill_manual(
     values = color_values,
     breaks = sort(names(color_values)),  
-    name = "Reported As") +
+    name = "Reported as") +
   scale_y_continuous(breaks = seq(0, 60, by = 10)) +
-  labs(x = "Arthropod Group", 
-       y = "False Negative %", 
+  labs(x = "Arthropod group", 
+       y = "False negative %", 
        #title = "Most Common Misidentifications", 
-       fill = "Reported As") +
+       fill = "Reported as") +
   theme_bw() + 
   theme(#plot.title = element_text(hjust=0.5, size=18), 
         legend.text = element_text(size = 11), 
