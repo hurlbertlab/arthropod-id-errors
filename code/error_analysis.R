@@ -85,7 +85,7 @@ wilcox.test(gameplaydf$best_ID_accuracy, gameplaydf$best_length_accuracy, paired
 wilcox.test(gameplaydf$best_length_accuracy, gameplaydf$best_pct_found, paired = TRUE)  
 
 
-pdf('figures/Figure3_game_scores.pdf', height = 5, width = 7)
+png('figures/Figure3_game_scores1.png', height = 5, width = 7, units = 'in', res = 300)
 par(mar = c(7, 5, 1, 1), cex.lab = 1.8)
 vioplot(gameplaydf[gameplaydf$userplays >= 2, c('first_pct_found', 'best_pct_found', 
                                                 'first_ID_accuracy', 'best_ID_accuracy', 
@@ -257,7 +257,7 @@ rev_stacked = ggplot(only_error_num[only_error_num$StandardGroup2 != "other",],
   theme(plot.tag = element_text(size = 20))
 
 
-pdf('figures/Figure4_misidentifications.pdf', height = 9, width = 7)
+png('figures/Figure4_misidentifications.png', height = 9, width = 7, units = 'in', res = 300)
 grid.arrange(
   stacked,
   grid::nullGrob(),   # spacer - modify the 0.05 value below in heights c()
@@ -295,7 +295,7 @@ length_estimates = data.frame(StandardGroup = NULL,
                               length_estimate = NULL,
                               p = NULL)
 
-pdf('figures/Figure5_error_rates_vs_length.pdf', height = 6, width = 8)
+png('figures/Figure5_error_rates_vs_length.png', height = 6, width = 8, units = 'in', res = 300)
 
 par(mfrow = c(3,3), mar=c(2.5,4,1,1), oma = c(4, 4, 1, 1), tck = -.03, mgp = c(2, .8, 0), 
     cex.axis = 1.5, cex.main = 1.8)
@@ -429,7 +429,7 @@ error.plot = effect_plot(
   )
 
 
-pdf('figures/Figure6_errors_over_time.pdf', height = 5, width = 7)
+png('figures/Figure6_errors_over_time.png', height = 5, width = 7, units = 'in', res = 300)
 error.plot 
 dev.off()
 
@@ -499,7 +499,7 @@ wilcox.test(lengthdata$Ruler_pctdev, lengthdata$Thumb_pctdev, paired = FALSE)
 wilcox.test(lengthdata$Control_pctdev, lengthdata$Ruler_pctdev, paired = FALSE)
 
 # Plot
-pdf('figures/Figure7_length_accuracy.pdf', height = 4.5, width = 8)
+png('figures/Figure7_length_accuracy.png', height = 4.5, width = 8, units = 'in', res = 300)
 par(mfrow = c(1, 2), mar = c(5, 5, 1, 1), oma = c(0, 0, 1.3, 0))
 boxplot(lengthdata[, c(1, 3, 5)], xaxt = "n", xlab = "Treatment", ylab = "Deviation (mm)", cex.lab = 1.5, 
         col = c('dodgerblue', 'salmon', 'limegreen'), las = 1, ylim = c(-22, 42))
