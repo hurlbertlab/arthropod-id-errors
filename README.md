@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/...)](https://doi.org/10.5281/zenodo....)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23578627.svg)](https://doi.org/10.5281/zenodo.23578627)
 
 This repository includes the data and code associated with the following publication:  
 
