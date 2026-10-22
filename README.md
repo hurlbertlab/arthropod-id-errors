@@ -1,8 +1,8 @@
 [![DOI](https://zenodo.org/...)](https://doi.org/10.5281/zenodo....)
 
-This repository includes the data and code associated with the following publication:
+This repository includes the data and code associated with the following publication:  
 
-Hurlbert, A. H. and E. Weaver. 2026. Are the data buggy? Sources and magnitudes of error in an arthropod citizen science project. Citizen Science: Theory and Practice 11(1): 33, pp.1-14. https://doi.org/10.5334/cstp.1012
+**Hurlbert, A. H. and E. Weaver. 2026. Are the data buggy? Sources and magnitudes of error in an arthropod citizen science project. Citizen Science: Theory and Practice 11(1): 33, pp.1-14. https://doi.org/10.5334/cstp.1012**
 
 ## File Organization  
 **`code` folder**  
